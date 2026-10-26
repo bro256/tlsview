@@ -35,16 +35,51 @@ browser.action.onClicked.addListener(() => {
 // Fires once per response, after the response headers arrive and before
 // the body is downloaded. Not fired for requests that fail before a response
 // (DNS error, refused connection, failed TLS handshake).
+//
+// getSecurityInfo() works only inside this listener, and only when the
+// listener is registered with "blocking". Being async, the listener returns
+// a Promise, and Firefox holds the response until that Promise settles.
 browser.webRequest.onHeadersReceived.addListener(
-  (details) => {
+  async (details) => {
     // tabId is -1 for requests not tied to a tab (extensions, updates, ...).
     const tab = details.tabId === -1 ? "no tab" : "tab " + details.tabId;
+    let info;
+    try {
+      info = await browser.webRequest.getSecurityInfo(details.requestId, {});
+    } catch (e) {
+      console.error("TLSView: getSecurityInfo failed for", details.url, e);
+      return;
+    }
+    if (!info) {
+      // Returned when the request is no longer known to Firefox.
+      console.warn("TLSView: no security info for", details.url);
+      return;
+    }
+
+    // state: "secure", "weak", "broken" or "insecure" (no TLS).
+    // For "insecure", the object contains only the state.
+    const summary =
+      info.state === "insecure"
+        ? "insecure (no TLS)"
+        : [
+            info.state,
+            info.protocolVersion,
+            "group=" + (info.keaGroupName ?? "?"),
+            "sig=" + (info.signatureSchemeName ?? "?"),
+          ].join(" ");
     console.log(
-      `TLSView: [${tab}] ${details.type} ${details.method} ${details.statusCode}`,
+      `TLSView: [${tab}] ${details.type} ${summary}`,
       details.fromCache ? "(cache)" : "",
       details.url,
     );
+
+    
+    // The full object for the page itself, to explore every field.
+    if (details.type === "main_frame") {
+      console.log("TLSView: full securityInfo for", details.url, info);
+    }
   },
   // Matches http, https, ws and wss URLs.
   { urls: ["*://*/*"] },
+  ["blocking"],
 );
