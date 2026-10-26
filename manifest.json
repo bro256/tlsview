@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TLSView",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Shows which TLS key exchange a site uses: classical, hybrid post-quantum or pure post-quantum (ML-KEM). Work in progress.",
   "icons": {
     "48": "icons/icon.svg",
@@ -14,7 +14,8 @@
     "default_icon": "icons/icon.svg"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "browser_specific_settings": {
     "gecko": {

@@ -1,12 +1,14 @@
 {
   "name": "tlsview",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "description": "Firefox extension: classical vs hybrid vs pure post-quantum TLS key exchange.",
+  "type": "module",
   "scripts": {
     "start": "web-ext run",
     "lint": "web-ext lint",
-    "build": "web-ext build --overwrite-dest"
+    "build": "web-ext build --overwrite-dest",
+    "test": "node --test"
   },
   "devDependencies": {
     "web-ext": "^10.8.0"

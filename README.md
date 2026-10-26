@@ -23,6 +23,7 @@ npm install
 npm start        # launches a clean Firefox profile with the extension loaded
 npm run lint     # checks the extension with Mozilla's addons-linter
 npm run build    # writes a .zip to web-ext-artifacts/
+npm test         # runs unit tests (Node.js 22 or later)
 ```
 
 ## Privacy

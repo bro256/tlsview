@@ -1,4 +1,4 @@
-"use strict";
+import { classifyGroup, describeGroup } from "./lib/classify.js";
 
 // Must match "host_permissions" in manifest.json.
 const HOST_PERMISSIONS = { origins: ["*://*/*"] };
@@ -43,6 +43,7 @@ browser.webRequest.onHeadersReceived.addListener(
   async (details) => {
     // tabId is -1 for requests not tied to a tab (extensions, updates, ...).
     const tab = details.tabId === -1 ? "no tab" : "tab " + details.tabId;
+
     let info;
     try {
       info = await browser.webRequest.getSecurityInfo(details.requestId, {});
@@ -65,15 +66,16 @@ browser.webRequest.onHeadersReceived.addListener(
             info.state,
             info.protocolVersion,
             "group=" + (info.keaGroupName ?? "?"),
+            "[" + describeGroup(classifyGroup(info.keaGroupName)) + "]",
             "sig=" + (info.signatureSchemeName ?? "?"),
           ].join(" ");
+
     console.log(
       `TLSView: [${tab}] ${details.type} ${summary}`,
       details.fromCache ? "(cache)" : "",
       details.url,
     );
 
-    
     // The full object for the page itself, to explore every field.
     if (details.type === "main_frame") {
       console.log("TLSView: full securityInfo for", details.url, info);
