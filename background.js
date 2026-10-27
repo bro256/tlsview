@@ -1,5 +1,6 @@
 import { classifyGroup, describeGroup } from "./lib/classify.js";
 import { newTabState, recordResponse } from "./lib/tabstate.js";
+import { summarize, describeSummary } from "./lib/ladder.js";
 
 // Must match "host_permissions" in manifest.json.
 const HOST_PERMISSIONS = { origins: ["*://*/*"] };
@@ -30,7 +31,8 @@ const ready = (async () => {
   for (const [key, state] of Object.entries(saved)) {
     if (!key.startsWith(STORAGE_PREFIX)) continue;
     const tabId = Number(key.slice(STORAGE_PREFIX.length));
-    if (openTabs.has(tabId)) tabStates.set(tabId, state);
+    // Records in an older shape (no setups) are dropped, not reused.
+    if (openTabs.has(tabId) && state?.setups) tabStates.set(tabId, state);
     else stale.push(key);
   }
   if (stale.length) await browser.storage.session.remove(stale);
@@ -61,14 +63,21 @@ browser.permissions.contains(HOST_PERMISSIONS).then((granted) => {
 
 // permissions.request() needs a user action, such as this click, and must be
 // called before any await. If already granted, it resolves without a prompt.
-// The click also prints the current tab's state.
+// The click also prints the current tab's summary and state.
 // Fires only while the action has no popup.
 browser.action.onClicked.addListener((tab) => {
   browser.permissions.request(HOST_PERMISSIONS).then((granted) => {
     console.log("TLSView: host permission granted =", granted);
   });
   ready.then(() => {
-    console.log(`TLSView: state of tab ${tab.id}`, tabStates.get(tab.id) ?? "(none)");
+    const state = tabStates.get(tab.id);
+    if (!state) {
+      console.log(`TLSView: tab ${tab.id}: no responses recorded`);
+      return;
+    }
+    const summary = summarize(state);
+    console.log(`TLSView: tab ${tab.id}\n${describeSummary(summary)}`);
+    console.log("TLSView: summary", summary, "state", state);
   });
 });
 
@@ -101,7 +110,7 @@ browser.webRequest.onHeadersReceived.addListener(
 
     // A main_frame response starts a new page in the tab: start a new state.
     if (details.type === "main_frame" || !tabStates.has(details.tabId)) {
-      tabStates.set(details.tabId, newTabState(null));
+      tabStates.set(details.tabId, newTabState());
     }
     recordResponse(tabStates.get(details.tabId), details, info);
     await saveTabState(details.tabId);

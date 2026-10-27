@@ -1,10 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  MAX_ITEMS,
   originOf,
+  urlWithoutQuery,
   newTabState,
-  profileOf,
-  profileKey,
+  setupOf,
+  setupKey,
   recordResponse,
 } from "../lib/tabstate.js";
 
@@ -18,75 +20,97 @@ const HYBRID = {
 const CLASSICAL = { ...HYBRID, keaGroupName: "x25519" };
 const INSECURE = { state: "insecure" };
 
+const r = (type, url, fromCache = false) => ({ type, url, fromCache });
+const only = (state) => {
+  const setups = Object.values(state.setups);
+  assert.equal(setups.length, 1);
+  return setups[0];
+};
+
 test("originOf keeps scheme, host and port only", () => {
   assert.equal(originOf("https://example.com/a/b?q=secret#x"), "https://example.com");
   assert.equal(originOf("https://example.com:8443/"), "https://example.com:8443");
-  assert.equal(originOf("http://example.com/"), "http://example.com");
   assert.equal(originOf("wss://example.com/socket"), "wss://example.com");
   assert.equal(originOf("not a url"), null);
   assert.equal(originOf("data:text/plain,hi"), null);
 });
 
-test("new state stores the page origin, not the URL", () => {
-  const s = newTabState("https://example.com/private?token=1");
+test("urlWithoutQuery drops query string and fragment", () => {
+  assert.equal(urlWithoutQuery("https://example.com/a/b?token=abc#x"), "https://example.com/a/b");
+  assert.equal(urlWithoutQuery("https://example.com"), "https://example.com/");
+  assert.equal(urlWithoutQuery("not a url"), null);
+});
+
+test("records the main frame with its signature", () => {
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "https://example.com/page?x=1"), HYBRID);
   assert.equal(s.pageOrigin, "https://example.com");
-  assert.deepEqual(s.origins, {});
-  assert.equal(s.mainFrame, null);
+  assert.deepEqual(s.mainFrame, { ...setupOf(HYBRID), signatureSchemeName: "ecdsa_secp256r1_sha256" });
 });
 
-test("records the main frame", () => {
-  const s = newTabState(null);
-  recordResponse(s, { type: "main_frame", url: "https://example.com/", fromCache: false }, HYBRID);
-  assert.equal(s.pageOrigin, "https://example.com");
-  assert.equal(s.mainFrame, profileKey(profileOf(HYBRID)));
+test("groups responses by TLS version, key exchange group and cipher suite", () => {
+  const s = newTabState();
+  recordResponse(s, r("script", "https://a.example/1.js"), HYBRID);
+  recordResponse(s, r("script", "https://b.example/2.js"), HYBRID);
+  recordResponse(s, r("script", "https://a.example/3.js"), CLASSICAL);
+  recordResponse(s, r("script", "https://a.example/4.js"), { ...HYBRID, cipherSuite: "TLS_AES_256_GCM_SHA384" });
+  assert.equal(Object.keys(s.setups).length, 3);
+  const hybrid = s.setups[setupKey(setupOf(HYBRID))];
+  assert.equal(hybrid.count, 2);
+  assert.deepEqual(hybrid.origins, ["https://a.example", "https://b.example"]);
 });
 
-test("counts responses with the same profile together", () => {
-  const s = newTabState("https://example.com/");
-  for (const fromCache of [false, true, true]) {
-    recordResponse(s, { type: "image", url: "https://cdn.example/x.png", fromCache }, HYBRID);
-  }
-  const profiles = Object.values(s.origins["https://cdn.example"].profiles);
-  assert.equal(profiles.length, 1);
-  assert.equal(profiles[0].count, 3);
-  assert.equal(profiles[0].fromCache, 2);
+test("the signature scheme does not split a setup", () => {
+  const s = newTabState();
+  recordResponse(s, r("image", "https://a.example/1.png"), HYBRID);
+  recordResponse(s, r("image", "https://b.example/2.png"), { ...HYBRID, signatureSchemeName: "rsa_pss_rsae_sha256" });
+  assert.deepEqual(only(s).signatures, { ecdsa_secp256r1_sha256: 1, rsa_pss_rsae_sha256: 1 });
 });
 
-test("keeps different profiles of one origin apart", () => {
-  const s = newTabState("https://example.com/");
-  recordResponse(s, { type: "script", url: "https://example.com/a.js", fromCache: false }, HYBRID);
-  recordResponse(s, { type: "script", url: "https://example.com/b.js", fromCache: false }, CLASSICAL);
-  const groups = Object.values(s.origins["https://example.com"].profiles).map((p) => p.keaGroupName);
-  assert.deepEqual(groups.sort(), ["mlkem768x25519", "x25519"]);
+test("counts responses and cached responses", () => {
+  const s = newTabState();
+  for (const cached of [false, true, true]) recordResponse(s, r("image", "https://a.example/x.png", cached), HYBRID);
+  assert.equal(only(s).count, 3);
+  assert.equal(only(s).fromCache, 2);
+  assert.deepEqual(only(s).urls, ["https://a.example/x.png"]);
 });
 
 test("records plain HTTP with nulls for missing TLS fields", () => {
-  const s = newTabState(null);
-  recordResponse(s, { type: "main_frame", url: "http://example.com/", fromCache: false }, INSECURE);
-  const [p] = Object.values(s.origins["http://example.com"].profiles);
-  assert.equal(p.state, "insecure");
-  assert.equal(p.keaGroupName, null);
-  assert.equal(p.protocolVersion, null);
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "http://example.com/"), INSECURE);
+  assert.equal(only(s).state, "insecure");
+  assert.equal(only(s).protocolVersion, null);
+  assert.equal(only(s).keaGroupName, null);
+  assert.deepEqual(only(s).signatures, {});
+});
+
+test("caps stored URLs and marks the list as truncated", () => {
+  const s = newTabState();
+  for (let i = 0; i < MAX_ITEMS + 5; i++) recordResponse(s, r("image", `https://a.example/${i}.png`), HYBRID);
+  assert.equal(only(s).urls.length, MAX_ITEMS);
+  assert.equal(only(s).urlsTruncated, true);
+  assert.equal(only(s).count, MAX_ITEMS + 5);
+  assert.equal(only(s).originsTruncated, false);
 });
 
 test("ignores responses whose URL has no origin", () => {
-  const s = newTabState(null);
-  recordResponse(s, { type: "image", url: "not a url", fromCache: false }, HYBRID);
-  assert.deepEqual(s.origins, {});
+  const s = newTabState();
+  recordResponse(s, r("image", "not a url"), HYBRID);
+  assert.deepEqual(s.setups, {});
 });
 
-test("state contains no full URLs", () => {
-  const s = newTabState("https://example.com/page?user=alice");
-  recordResponse(s, { type: "main_frame", url: "https://example.com/page?user=alice", fromCache: false }, HYBRID);
-  recordResponse(s, { type: "xmlhttprequest", url: "https://api.example/v1/me?token=abc", fromCache: false }, HYBRID);
+test("state contains no query strings or fragments", () => {
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "https://example.com/page?user=alice#me"), HYBRID);
+  recordResponse(s, r("xmlhttprequest", "https://api.example/v1/me?token=abc"), HYBRID);
   const json = JSON.stringify(s);
-  assert.ok(!json.includes("alice"));
-  assert.ok(!json.includes("token"));
-  assert.ok(!json.includes("/v1/"));
+  for (const secret of ["alice", "token", "abc", "#me", "?"]) {
+    assert.ok(!json.includes(secret), secret);
+  }
 });
 
 test("state survives a JSON round trip unchanged", () => {
-  const s = newTabState("https://example.com/");
-  recordResponse(s, { type: "main_frame", url: "https://example.com/", fromCache: false }, HYBRID);
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "https://example.com/"), HYBRID);
   assert.deepEqual(JSON.parse(JSON.stringify(s)), s);
 });
