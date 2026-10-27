@@ -93,16 +93,16 @@ test("covers exactly the names Firefox reports", () => {
 test("describes results", () => {
   assert.equal(
     describeGroup(classifyGroup("mlkem768x25519")),
-    "hybrid: X25519 + ML-KEM-768 (PQ component: NIST security category 3, FIPS 203)",
+    "PQ/T hybrid: X25519 + ML-KEM-768 (PQ component: NIST security category 3, FIPS 203)",
   );
   assert.equal(
     describeGroup(classifyGroup("mlkem1024")),
-    "pure PQ: ML-KEM-1024 (NIST security category 5, FIPS 203)",
+    "pure post-quantum: ML-KEM-1024 (NIST security category 5, FIPS 203)",
   );
-  assert.equal(describeGroup(classifyGroup("x25519")), "classical: X25519");
+  assert.equal(describeGroup(classifyGroup("x25519")), "traditional: X25519");
   assert.equal(
     describeGroup(classifyGroup("xyber768d00")),
-    "hybrid: X25519 + Kyber768 (round 3) (PQ component: NIST security category 3, " +
+    "PQ/T hybrid: X25519 + Kyber768 (round 3) (PQ component: NIST security category 3, " +
       "claimed in the round-3 submission), obsolete",
   );
   assert.equal(describeGroup(classifyGroup("none")), "no key exchange group");

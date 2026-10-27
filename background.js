@@ -1,6 +1,7 @@
 import { classifyGroup, describeGroup } from "./lib/classify.js";
-import { newTabState, recordResponse } from "./lib/tabstate.js";
+import { newTabState, recordResponse, originOf } from "./lib/tabstate.js";
 import { summarize, describeSummary } from "./lib/ladder.js";
+import { iconFor, NOT_INSPECTABLE } from "./lib/icon.js";
 
 // Must match "host_permissions" in manifest.json.
 const HOST_PERMISSIONS = { origins: ["*://*/*"] };
@@ -42,6 +43,32 @@ const ready = (async () => {
 function saveTabState(tabId) {
   const state = tabStates.get(tabId);
   return browser.storage.session.set({ [STORAGE_PREFIX + tabId]: state });
+}
+
+async function dropTabState(tabId) {
+  tabStates.delete(tabId);
+  await browser.storage.session.remove(STORAGE_PREFIX + tabId);
+}
+
+// ---------------------------------------------------------------------------
+// Toolbar icon and tooltip, per tab. Firefox resets a tab's icon and title
+// when the tab navigates, so they are set again after each response and when
+// the page has finished loading.
+
+async function showIcon(tabId, icon) {
+  try {
+    await Promise.all([
+      browser.action.setIcon({ tabId, path: icon.path }),
+      browser.action.setTitle({ tabId, title: icon.title }),
+    ]);
+  } catch {
+    // The tab was closed meanwhile.
+  }
+}
+
+function updateIcon(tabId) {
+  const state = tabStates.get(tabId) ?? newTabState();
+  return showIcon(tabId, iconFor(summarize(state)));
 }
 
 // ---------------------------------------------------------------------------
@@ -114,6 +141,8 @@ browser.webRequest.onHeadersReceived.addListener(
     }
     recordResponse(tabStates.get(details.tabId), details, info);
     await saveTabState(details.tabId);
+    // Not awaited: the response does not need to wait for the icon.
+    updateIcon(details.tabId);
 
     if (details.type === "main_frame") {
       console.log(
@@ -129,9 +158,35 @@ browser.webRequest.onHeadersReceived.addListener(
   ["blocking"],
 );
 
+// Page finished loading: check that the record belongs to this page, then
+// set the icon again (navigation reset it).
+//
+// tab.url is available only for pages the host permission covers (http,
+// https). Without it the page cannot be inspected (about:, file:, ...).
+// A record whose page origin differs from the tab's is from an earlier page:
+// the current one sent no main_frame response we saw (for example, it was
+// restored from the back/forward cache).
+browser.tabs.onUpdated.addListener(
+  async (tabId, changeInfo, tab) => {
+    if (changeInfo.status !== "complete") return;
+    await ready;
+    const tabOrigin = tab.url ? originOf(tab.url) : null;
+    if (!tabOrigin) {
+      await dropTabState(tabId);
+      await showIcon(tabId, NOT_INSPECTABLE);
+      return;
+    }
+    const state = tabStates.get(tabId);
+    if (state && state.pageOrigin !== tabOrigin) {
+      await dropTabState(tabId);
+    }
+    await updateIcon(tabId);
+  },
+  { properties: ["status"] },
+);
+
 // Closed tab: drop its state from memory and storage.
 browser.tabs.onRemoved.addListener(async (tabId) => {
   await ready;
-  tabStates.delete(tabId);
-  await browser.storage.session.remove(STORAGE_PREFIX + tabId);
+  await dropTabState(tabId);
 });
