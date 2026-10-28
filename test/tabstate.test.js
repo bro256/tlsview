@@ -8,6 +8,8 @@ import {
   setupOf,
   setupKey,
   recordResponse,
+  topDocumentOrigin,
+  isFromCurrentPage,
 } from "../lib/tabstate.js";
 
 const HYBRID = {
@@ -113,4 +115,35 @@ test("state survives a JSON round trip unchanged", () => {
   const s = newTabState();
   recordResponse(s, r("main_frame", "https://example.com/"), HYBRID);
   assert.deepEqual(JSON.parse(JSON.stringify(s)), s);
+});
+
+test("topDocumentOrigin uses the top-level frame, or the document", () => {
+  assert.equal(topDocumentOrigin({ documentUrl: "https://a.example/page", frameAncestors: [] }), "https://a.example");
+  assert.equal(topDocumentOrigin({
+    documentUrl: "https://ads.example/frame.html",
+    frameAncestors: [{ url: "https://mid.example/x", frameId: 5 }, { url: "https://top.example/", frameId: 0 }],
+  }), "https://top.example");
+  assert.equal(topDocumentOrigin({}), null);
+  assert.equal(topDocumentOrigin({ documentUrl: "about:blank" }), null);
+});
+
+test("isFromCurrentPage drops late responses of a previous page from another origin", () => {
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "https://new.example/"), HYBRID);
+  const late = { type: "image", url: "https://cdn.old.example/i.png", documentUrl: "https://old.example/", frameAncestors: [] };
+  const own = { type: "image", url: "https://cdn.example/i.png", documentUrl: "https://new.example/", frameAncestors: [] };
+  const inFrame = {
+    type: "script", url: "https://ads.example/a.js", documentUrl: "https://ads.example/f.html",
+    frameAncestors: [{ url: "https://new.example/", frameId: 0 }],
+  };
+  assert.equal(isFromCurrentPage(s, late), false);
+  assert.equal(isFromCurrentPage(s, own), true);
+  assert.equal(isFromCurrentPage(s, inFrame), true);
+  assert.equal(isFromCurrentPage(s, { type: "main_frame", url: "https://other.example/" }), true);
+  assert.equal(isFromCurrentPage(s, { type: "image", url: "https://x.example/i.png" }), true);
+});
+
+test("isFromCurrentPage accepts everything before the page is known", () => {
+  assert.equal(isFromCurrentPage(newTabState(),
+    { type: "image", url: "https://x.example/i.png", documentUrl: "https://y.example/" }), true);
 });

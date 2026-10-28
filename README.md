@@ -26,6 +26,12 @@ npm run build    # writes a .zip to web-ext-artifacts/
 npm test         # runs unit tests (Node.js 22 or later)
 ```
 
+## Known limitations
+
+- Only responses Firefox reports to extensions are seen. Firefox hides all requests on some Mozilla sites, such as addons.mozilla.org, from extensions.
+- A page restored from the back/forward cache sends no requests. If it has the same origin as the page shown before it, the details of that earlier page are shown.
+- Responses that arrive late from a previous page of the same origin are counted for the current page.
+
 ## Privacy
 
 The extension collects and transmits no data (`data_collection_permissions: none`).

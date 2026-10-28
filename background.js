@@ -1,7 +1,8 @@
 import { classifyGroup, describeGroup } from "./lib/classify.js";
-import { newTabState, recordResponse, originOf } from "./lib/tabstate.js";
+import { newTabState, recordResponse, originOf, isFromCurrentPage } from "./lib/tabstate.js";
 import { summarize } from "./lib/ladder.js";
-import { iconFor, NOT_INSPECTABLE } from "./lib/icon.js";
+import { iconFor, NOT_INSPECTABLE, RESTRICTED } from "./lib/icon.js";
+import { isRestrictedUrl } from "./lib/restricted.js";
 
 // Must match "host_permissions" in manifest.json.
 const HOST_PERMISSIONS = { origins: ["*://*/*"] };
@@ -119,7 +120,10 @@ browser.webRequest.onHeadersReceived.addListener(
     if (details.type === "main_frame" || !tabStates.has(details.tabId)) {
       tabStates.set(details.tabId, newTabState());
     }
-    recordResponse(tabStates.get(details.tabId), details, info);
+    const state = tabStates.get(details.tabId);
+    // A late response for the previous page is not part of this one.
+    if (!isFromCurrentPage(state, details)) return;
+    recordResponse(state, details, info);
     await saveTabState(details.tabId);
     // Not awaited: the response does not need to wait for the icon.
     updateIcon(details.tabId);
@@ -154,6 +158,11 @@ browser.tabs.onUpdated.addListener(
     if (!tabOrigin) {
       await dropTabState(tabId);
       await showIcon(tabId, NOT_INSPECTABLE);
+      return;
+    }
+    if (isRestrictedUrl(tab.url)) {
+      await dropTabState(tabId);
+      await showIcon(tabId, RESTRICTED);
       return;
     }
     const state = tabStates.get(tabId);

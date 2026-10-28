@@ -5,6 +5,7 @@ import { buildView, protocolLabel, referenceLabel, plural } from "../lib/view.js
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
 const PQT = { ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256" };
+const PURE = { ...TLS13, keaGroupName: "mlkem1024" };
 const TRAD13 = { ...TLS13, keaGroupName: "x25519", signatureSchemeName: "rsa_pss_rsae_sha256" };
 const NO_GROUP = { ...TLS13, keaGroupName: null };
 const TLS12 = {
@@ -27,6 +28,13 @@ test("pages that cannot be inspected", () => {
   }
 });
 
+test("restricted Mozilla sites", () => {
+  const v = buildView(tab([["main_frame", "https://a.example/", PQT]]), "https://addons.mozilla.org/en-US/firefox/");
+  assert.equal(v.status, "restricted");
+  assert.equal(v.origin, "https://addons.mozilla.org");
+  assert.equal(v.message, "Firefox does not let extensions inspect this site.");
+});
+
 test("page not seen: no record, no main frame, or a record of another origin", () => {
   assert.equal(buildView(null, "https://a.example/").status, "not-seen");
   assert.equal(buildView(tab([["image", "https://a.example/i.png", PQT]]), "https://a.example/").status, "not-seen");
@@ -42,32 +50,64 @@ test("page section for a PQ/T hybrid page", () => {
   assert.equal(v.status, "ok");
   assert.equal(v.origin, "https://a.example");
   assert.equal(v.page.icon, "icons/step-pqt.svg");
-  assert.equal(v.page.label, "TLS 1.3 · PQ/T hybrid");
+  assert.equal(v.page.headline, "TLS 1.3 · PQ/T hybrid key exchange (quantum-resistant)");
   assert.deepEqual(v.page.rows, [
     ["Protocol", "TLS 1.3"],
-    ["Key exchange", "X25519MLKEM768 (mlkem768x25519)"],
-    ["Type", "PQ/T hybrid: X25519 + ML-KEM-768 (PQ component: NIST security category 3, FIPS 203)"],
-    ["IANA", "Recommended: Y · RFC 10024"],
+    ["Key exchange", "X25519MLKEM768 (Firefox: mlkem768x25519)"],
+    ["Key exchange type", "PQ/T hybrid: X25519 (traditional) + ML-KEM-768 (post-quantum), RFC 10024"],
     ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
-    ["Signature", "ecdsa_secp256r1_sha256"],
+    ["Signature scheme", "ecdsa_secp256r1_sha256"],
   ]);
   assert.deepEqual(v.warnings, []);
+});
+
+// Headline and key exchange type for every kind of page.
+test("headline and key exchange type per step", () => {
+  const cases = [
+    [PURE, "TLS 1.3 · post-quantum key exchange (quantum-resistant)",
+      "Post-quantum: ML-KEM-1024, draft-ietf-tls-mlkem (approved, not yet an RFC)"],
+    [TRAD13, "TLS 1.3 · traditional key exchange (not quantum-resistant)",
+      "Traditional: X25519, RFC 9846; RFC 8422"],
+    [TLS12, "TLS 1.2 · traditional key exchange (not quantum-resistant)",
+      "Traditional: P-256, RFC 8422"],
+    [{ ...TLS12, keaGroupName: "none" }, "TLS 1.2 · traditional key exchange (not quantum-resistant)",
+      "No key exchange group reported (for example, RSA key transport)"],
+    [{ ...TLS12, keaGroupName: "custom" }, "TLS 1.2 · traditional key exchange (not quantum-resistant)",
+      "Traditional: finite field DH with a custom prime"],
+    [{ state: "secure", protocolVersion: "TLSv1", keaGroupName: "P256" }, "TLS 1.0 · deprecated protocol",
+      "Traditional: P-256, RFC 8422"],
+    [{ ...TLS13, keaGroupName: "xyber768d00" }, "TLS 1.3 · PQ/T hybrid key exchange (pre-standard, obsolete)",
+      "PQ/T hybrid: X25519 (traditional) + Kyber768 round 3 (pre-standard)"],
+    [{ ...TLS13, keaGroupName: "none" }, "Key exchange not determined", "No key exchange group reported"],
+    [NO_GROUP, "Key exchange not determined", undefined],
+  ];
+  for (const [info, expectedHeadline, expectedType] of cases) {
+    const v = buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/");
+    assert.equal(v.page.headline, expectedHeadline, JSON.stringify(info));
+    const type = v.page.rows.find(([term]) => term === "Key exchange type");
+    assert.equal(type?.[1], expectedType, JSON.stringify(info));
+  }
 });
 
 test("key exchange shows one name when IANA and Firefox names are equal", () => {
   const v = buildView(tab([["main_frame", "https://a.example/", TRAD13]]), "https://a.example/");
   assert.deepEqual(v.page.rows[1], ["Key exchange", "x25519"]);
-  assert.deepEqual(v.page.rows[3], ["IANA", "Recommended: Y · RFC 9846; RFC 8422"]);
+});
+
+test("key exchange shows the reported name when the registry does not know it", () => {
+  const v = buildView(tab([["main_frame", "https://a.example/", { ...TLS13, keaGroupName: "unknown group" }]]),
+    "https://a.example/");
+  assert.deepEqual(v.page.rows[1], ["Key exchange", "unknown group"]);
 });
 
 test("page section for plain HTTP and for an unknown key exchange", () => {
   const http = buildView(tab([["main_frame", "http://a.example/", INSECURE]]), "http://a.example/");
-  assert.equal(http.page.label, "No HTTPS");
-  assert.deepEqual(http.page.rows, [["Encryption", "Not encrypted (no HTTPS)"]]);
+  assert.equal(http.page.headline, "Not encrypted (no HTTPS)");
+  assert.deepEqual(http.page.rows, []);
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Key exchange", "Cipher suite", "Signature"]);
+  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Key exchange", "Cipher suite", "Signature scheme"]);
   assert.deepEqual(unknown.page.rows[1], ["Key exchange", "not reported"]);
 });
 
@@ -108,6 +148,8 @@ test("labels", () => {
   assert.equal(protocolLabel(null), "not reported");
   assert.equal(referenceLabel("[draft-tls-westerbaan-xyber768d00-02]; [RFC 10024]"),
     "draft-tls-westerbaan-xyber768d00-02; RFC 10024");
+  assert.equal(referenceLabel("[RFC-ietf-tls-mlkem-10]"), "draft-ietf-tls-mlkem (approved, not yet an RFC)");
+  assert.equal(referenceLabel("[draft-yang-tls-hybrid-sm2-mlkem-03]"), "draft-yang-tls-hybrid-sm2-mlkem-03");
   assert.equal(plural(1, "response"), "1 response");
   assert.equal(plural(2, "origin"), "2 origins");
 });

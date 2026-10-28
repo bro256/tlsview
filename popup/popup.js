@@ -38,17 +38,27 @@ function renderMessage(message, hint, extra) {
   ]));
 }
 
+// Text with names kept on one line: hyphenated words (ML-KEM-768) and RFC
+// numbers (RFC 10024). The characters are unchanged, so copied text still
+// has normal hyphens and spaces.
+function keepNamesTogether(text) {
+  return (text.match(/RFC \d+[;,)]?|\S+|\s+/g) ?? []).map((part) =>
+    part.includes("-") || part.startsWith("RFC ")
+      ? el("span", { className: "nowrap", text: part })
+      : document.createTextNode(part));
+}
+
 function renderPage(page) {
   const rows = [];
   for (const [term, value] of page.rows) {
-    const mono = term === "Key exchange" || term === "Cipher suite" || term === "Signature";
-    rows.push(el("dt", { text: term }), el("dd", { className: mono ? "mono" : "", text: value }));
+    const mono = term === "Key exchange" || term === "Cipher suite" || term === "Signature scheme";
+    rows.push(el("dt", { text: term }), el("dd", { className: mono ? "mono" : "" }, keepNamesTogether(value)));
   }
   return el("section", {}, [
     el("h2", {}, [el("span", { text: "This page" })]),
     el("div", { className: "page-head" }, [
       el("img", { src: iconSrc(page.icon), alt: "" }),
-      el("span", { className: "label", text: page.label }),
+      el("span", { className: "label", text: page.headline }),
     ]),
     el("dl", {}, rows),
   ]);
