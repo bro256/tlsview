@@ -128,14 +128,15 @@ test("an HTTP page never warns", () => {
 
 test("setup titles", () => {
   const title = (info) => setupTitle(summarize(tab([["main_frame", "https://a.example/", info]])).setups[0]);
-  assert.equal(title(HYBRID), "TLS 1.3 · mlkem768x25519 · PQ/T hybrid");
-  assert.equal(title(KYBER), "TLS 1.3 · xyber768d00 · PQ/T hybrid, obsolete");
-  assert.equal(title(PURE), "TLS 1.3 · mlkem1024 · pure post-quantum");
+  assert.equal(title(HYBRID), "TLS 1.3 · X25519MLKEM768 · PQ/T hybrid");
+  assert.equal(title(KYBER), "TLS 1.3 · X25519Kyber768Draft00 · PQ/T hybrid, obsolete");
+  assert.equal(title(PURE), "TLS 1.3 · MLKEM1024 · pure post-quantum");
   assert.equal(title(TRAD13), "TLS 1.3 · x25519 · traditional");
-  assert.equal(title(TLS12), "TLS 1.2 · P256");
+  assert.equal(title(TLS12), "TLS 1.2 · secp256r1");
   assert.equal(title({ state: "secure", protocolVersion: "TLSv1.1" }), "TLS 1.1");
   assert.equal(title(INSECURE), "No HTTPS");
   assert.equal(title(NO_GROUP), "Not determined · TLSv1.3 · key exchange not reported");
+  assert.equal(title({ ...TLS13, keaGroupName: "unknown group" }), "Not determined · TLSv1.3 · unknown group");
 });
 
 test("describeSummary", () => {
@@ -150,12 +151,12 @@ test("describeSummary", () => {
     "  Cipher suite  TLS_AES_128_GCM_SHA256",
     "  Signature     ecdsa_secp256r1_sha256",
     "TLS setups in this tab (2 responses):",
-    "  TLS 1.2 · P256",
+    "  TLS 1.2 · secp256r1",
     "    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
     "    1 responses (0 from cache), 1 origin(s)",
-    "  TLS 1.3 · mlkem768x25519 · PQ/T hybrid",
+    "  TLS 1.3 · X25519MLKEM768 · PQ/T hybrid",
     "    TLS_AES_128_GCM_SHA256",
     "    1 responses (0 from cache), 1 origin(s)",
-    "Warning: some responses in this tab use a lower step than the page",
+    "Warning: some responses in this tab have a lower protection level than the page",
   ].join("\n"));
 });

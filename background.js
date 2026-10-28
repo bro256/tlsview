@@ -1,6 +1,6 @@
 import { classifyGroup, describeGroup } from "./lib/classify.js";
 import { newTabState, recordResponse, originOf } from "./lib/tabstate.js";
-import { summarize, describeSummary } from "./lib/ladder.js";
+import { summarize } from "./lib/ladder.js";
 import { iconFor, NOT_INSPECTABLE } from "./lib/icon.js";
 
 // Must match "host_permissions" in manifest.json.
@@ -84,28 +84,8 @@ browser.runtime.onInstalled.addListener((details) => {
 // withhold or revoke them. Without them, onHeadersReceived never fires.
 browser.permissions.contains(HOST_PERMISSIONS).then((granted) => {
   if (!granted) {
-    console.warn("TLSView: host permission missing; click the toolbar button to grant it");
+    console.warn("TLSView: host permission missing; open the TLSView popup to grant it");
   }
-});
-
-// permissions.request() needs a user action, such as this click, and must be
-// called before any await. If already granted, it resolves without a prompt.
-// The click also prints the current tab's summary and state.
-// Fires only while the action has no popup.
-browser.action.onClicked.addListener((tab) => {
-  browser.permissions.request(HOST_PERMISSIONS).then((granted) => {
-    console.log("TLSView: host permission granted =", granted);
-  });
-  ready.then(() => {
-    const state = tabStates.get(tab.id);
-    if (!state) {
-      console.log(`TLSView: tab ${tab.id}: no responses recorded`);
-      return;
-    }
-    const summary = summarize(state);
-    console.log(`TLSView: tab ${tab.id}\n${describeSummary(summary)}`);
-    console.log("TLSView: summary", summary, "state", state);
-  });
 });
 
 // Fires once per response, after the response headers arrive and before

@@ -1,8 +1,8 @@
 # TLSView
 
-Firefox extension for checking which TLS key exchange a site uses: classical, hybrid post-quantum, or pure post-quantum (ML-KEM).
+Firefox extension for checking which TLS version and key exchange a site uses: traditional, PQ/T hybrid, or pure post-quantum (ML-KEM).
 
-**Status:** early development. The extension currently does nothing visible beyond logging to the console.
+**Status:** early development. The toolbar icon shows the page's TLS version and key exchange; the popup lists the TLS setups of every response in the tab.
 
 ## Requirements
 
