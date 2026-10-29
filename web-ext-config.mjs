@@ -6,5 +6,6 @@ export default {
     "package-lock.json",
     "web-ext-config.mjs",
     "test",
+    "TESTING.md",
   ],
 };
