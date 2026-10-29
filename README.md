@@ -45,6 +45,17 @@ Groups are identified by their [IANA TLS Supported Groups](https://www.iana.org/
 
 Firefox also reports `none` (no key exchange group, e.g. TLS 1.2 RSA key transport) and `custom` (TLS 1.2 DHE with a prime not from RFC 7919). NIST security categories are from FIPS 203. The hybrid groups are specified in RFC 10024; MLKEM1024 in draft-ietf-tls-mlkem.
 
+## Optional Firefox settings
+
+Two `about:config` preferences let Firefox negotiate levels it does not use by default. Both are off by default and apply to the whole browser, so use them for testing and reset them afterwards.
+
+| Preference | Default | When `true` |
+|---|---|---|
+| `security.tls.enable_mlkem1024` | `false` | Firefox also offers pure ML-KEM-1024 (MLKEM1024) in TLS 1.3. It sends no key share for it, so a server that selects it asks for one with a HelloRetryRequest. |
+| `security.tls.version.enable-deprecated` | `false` | Firefox allows TLS 1.0 and 1.1. |
+
+A change applies to new connections only. Restart Firefox, then reload the page without the cache (Ctrl+F5).
+
 ## Popup
 
 **This page** shows the page's own connection:
