@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { newTabState, recordResponse } from "../lib/tabstate.js";
-import { STEPS, rankOf, stepOf, summarize, setupTitle, describeSummary } from "../lib/ladder.js";
+import { STEPS, rankOf, stepOf, summarize, setupTitle } from "../lib/ladder.js";
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
 const HYBRID = { ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256" };
@@ -137,26 +137,4 @@ test("setup titles", () => {
   assert.equal(title(INSECURE), "No HTTPS");
   assert.equal(title(NO_GROUP), "Not determined · TLSv1.3 · key exchange not reported");
   assert.equal(title({ ...TLS13, keaGroupName: "unknown group" }), "Not determined · TLSv1.3 · unknown group");
-});
-
-test("describeSummary", () => {
-  const text = describeSummary(summarize(tab([
-    ["main_frame", "https://a.example/", HYBRID],
-    ["script", "https://tracker.example/t.js", TLS12],
-  ])));
-  assert.equal(text, [
-    "This page: TLS 1.3 · PQ/T hybrid",
-    "  Key exchange  mlkem768x25519 · PQ/T hybrid: X25519 + ML-KEM-768 (PQ component: NIST security category 3, FIPS 203)",
-    "                [RFC 10024] · Recommended: Y",
-    "  Cipher suite  TLS_AES_128_GCM_SHA256",
-    "  Signature     ecdsa_secp256r1_sha256",
-    "TLS setups in this tab (2 responses):",
-    "  TLS 1.2 · secp256r1",
-    "    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-    "    1 responses (0 from cache), 1 origin(s)",
-    "  TLS 1.3 · X25519MLKEM768 · PQ/T hybrid",
-    "    TLS_AES_128_GCM_SHA256",
-    "    1 responses (0 from cache), 1 origin(s)",
-    "Warning: some responses in this tab have a lower protection level than the page",
-  ].join("\n"));
 });

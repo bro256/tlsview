@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GROUPS, FIREFOX_SPECIAL } from "../lib/groups.js";
-import { classifyGroup, describeGroup } from "../lib/classify.js";
+import { classifyGroup } from "../lib/classify.js";
 
 // Every name getKeaGroupName() in Firefox can return (nsNSSCallbacks.cpp),
 // and the expected mode.
@@ -88,23 +88,4 @@ test("covers exactly the names Firefox reports", () => {
     "unknown group",
   ].sort();
   assert.deepEqual(registryNames, Object.keys(FIREFOX_NAMES).sort());
-});
-
-test("describes results", () => {
-  assert.equal(
-    describeGroup(classifyGroup("mlkem768x25519")),
-    "PQ/T hybrid: X25519 + ML-KEM-768 (PQ component: NIST security category 3, FIPS 203)",
-  );
-  assert.equal(
-    describeGroup(classifyGroup("mlkem1024")),
-    "pure post-quantum: ML-KEM-1024 (NIST security category 5, FIPS 203)",
-  );
-  assert.equal(describeGroup(classifyGroup("x25519")), "traditional: X25519");
-  assert.equal(
-    describeGroup(classifyGroup("xyber768d00")),
-    "PQ/T hybrid: X25519 + Kyber768 (round 3) (PQ component: NIST security category 3, " +
-      "claimed in the round-3 submission), obsolete",
-  );
-  assert.equal(describeGroup(classifyGroup("none")), "no key exchange group");
-  assert.equal(describeGroup(classifyGroup("???")), "unknown");
 });

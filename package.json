@@ -1,6 +1,6 @@
 {
   "name": "tlsview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Firefox extension: TLS version and traditional, PQ/T hybrid or pure post-quantum key exchange.",
   "type": "module",
