@@ -6,7 +6,7 @@ import { buildView, protocolLabel, referenceLabel, plural } from "../lib/view.js
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
 const PQT = {
   ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256",
-  hsts: true,
+  hsts: true, usedEch: false,
 };
 const PURE = { ...TLS13, keaGroupName: "mlkem1024" };
 const TRAD13 = { ...TLS13, keaGroupName: "x25519", signatureSchemeName: "rsa_pss_rsae_sha256" };
@@ -61,6 +61,7 @@ test("page section for a PQ/T hybrid page", () => {
     ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
     ["Signature scheme", "ecdsa_secp256r1_sha256"],
     ["HSTS", "Known to Firefox; no header in this response"],
+    ["Encrypted Client Hello", "Not used"],
   ]);
   assert.deepEqual(v.warnings, []);
 });
@@ -111,7 +112,7 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Key exchange", "Cipher suite", "Signature scheme", "HSTS"]);
+  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Key exchange", "Cipher suite", "Signature scheme", "HSTS", "Encrypted Client Hello"]);
   assert.deepEqual(unknown.page.rows[1], ["Key exchange", "not reported"]);
 });
 
@@ -165,4 +166,12 @@ test("HSTS row", () => {
   assert.equal(row(sent, "HSTS"), "Header sent: max-age=31536000 (365 days); includeSubDomains; preload");
   const none = buildView(tab([["main_frame", "https://a.example/", { ...TRAD13, hsts: false }]]), "https://a.example/");
   assert.equal(row(none, "HSTS"), "Not used");
+});
+
+test("Encrypted Client Hello row", () => {
+  const row = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
+    .page.rows.find(([t]) => t === "Encrypted Client Hello")[1];
+  assert.equal(row({ ...TRAD13, usedEch: true }), "Used");
+  assert.equal(row({ ...TRAD13, usedEch: false }), "Not used");
+  assert.equal(row(TRAD13), "not reported");
 });

@@ -49,7 +49,7 @@ test("records the main frame with its signature", () => {
   assert.equal(s.pageOrigin, "https://example.com");
   assert.deepEqual(s.mainFrame, {
     ...setupOf(HYBRID), signatureSchemeName: "ecdsa_secp256r1_sha256",
-    hsts: null, hstsHeader: null,
+    hsts: null, usedEch: null, hstsHeader: null,
   });
 });
 

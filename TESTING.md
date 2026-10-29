@@ -38,7 +38,7 @@ These connections are expected to **fail** in Firefox, because Firefox does not 
 | https://test.openquantumsafe.org:6005/ | SecP384r1MLKEM1024 |
 | https://test.openquantumsafe.org:6026/ | MLKEM768 |
 
-## HSTS
+## HSTS and Encrypted Client Hello
 
 Shown for the page itself, not rated.
 
@@ -46,6 +46,9 @@ Shown for the page itself, not rated.
 |---|---|
 | Open a site that sends `Strict-Transport-Security`, such as https://github.com/ | **HSTS** shows the header as sent. Compare with the response headers of the page in the Network panel (F12). |
 | Open an https page whose response headers (F12 → Network) have no `Strict-Transport-Security` | **HSTS:** `Not used`, or `Known to Firefox; no header in this response` if Firefox already knows the site |
+| Open https://crypto.cloudflare.com/cdn-cgi/trace | **Encrypted Client Hello** agrees with the page: `Used` when it shows `sni=encrypted`, `Not used` when it shows `sni=plaintext` |
+
+Firefox gets a site's ECH key from its DNS HTTPS record. Without DNS over HTTPS, whether that record can be read depends on the operating system and DNS server; on Windows 10, Firefox does not query it from the system DNS. If ECH is never used, turn on DNS over HTTPS (Settings → Privacy & Security), restart Firefox and retry.
 
 ## Pages TLSView cannot inspect
 
