@@ -47,7 +47,10 @@ test("records the main frame with its signature", () => {
   const s = newTabState();
   recordResponse(s, r("main_frame", "https://example.com/page?x=1"), HYBRID);
   assert.equal(s.pageOrigin, "https://example.com");
-  assert.deepEqual(s.mainFrame, { ...setupOf(HYBRID), signatureSchemeName: "ecdsa_secp256r1_sha256" });
+  assert.deepEqual(s.mainFrame, {
+    ...setupOf(HYBRID), signatureSchemeName: "ecdsa_secp256r1_sha256",
+    hsts: null, hstsHeader: null,
+  });
 });
 
 test("groups responses by TLS version, key exchange group and cipher suite", () => {

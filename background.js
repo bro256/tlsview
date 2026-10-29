@@ -139,7 +139,8 @@ browser.webRequest.onHeadersReceived.addListener(
   },
   // Matches http, https, ws and wss URLs.
   { urls: ["*://*/*"] },
-  ["blocking"],
+  // responseHeaders: for the page's Strict-Transport-Security header.
+  ["blocking", "responseHeaders"],
 );
 
 // Page finished loading: check that the record belongs to this page, then

@@ -4,7 +4,10 @@ import { newTabState, recordResponse } from "../lib/tabstate.js";
 import { buildView, protocolLabel, referenceLabel, plural } from "../lib/view.js";
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
-const PQT = { ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256" };
+const PQT = {
+  ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256",
+  hsts: true,
+};
 const PURE = { ...TLS13, keaGroupName: "mlkem1024" };
 const TRAD13 = { ...TLS13, keaGroupName: "x25519", signatureSchemeName: "rsa_pss_rsae_sha256" };
 const NO_GROUP = { ...TLS13, keaGroupName: null };
@@ -16,8 +19,8 @@ const INSECURE = { state: "insecure" };
 
 function tab(rows) {
   const s = newTabState();
-  for (const [type, url, info, fromCache = false] of rows) {
-    recordResponse(s, { type, url, fromCache }, info);
+  for (const [type, url, info, fromCache = false, responseHeaders = []] of rows) {
+    recordResponse(s, { type, url, fromCache, responseHeaders }, info);
   }
   return s;
 }
@@ -57,6 +60,7 @@ test("page section for a PQ/T hybrid page", () => {
     ["Key exchange type", "PQ/T hybrid: X25519 (traditional) + ML-KEM-768 (post-quantum), RFC 10024"],
     ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
     ["Signature scheme", "ecdsa_secp256r1_sha256"],
+    ["HSTS", "Known to Firefox; no header in this response"],
   ]);
   assert.deepEqual(v.warnings, []);
 });
@@ -107,7 +111,7 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Key exchange", "Cipher suite", "Signature scheme"]);
+  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Key exchange", "Cipher suite", "Signature scheme", "HSTS"]);
   assert.deepEqual(unknown.page.rows[1], ["Key exchange", "not reported"]);
 });
 
@@ -152,4 +156,13 @@ test("labels", () => {
   assert.equal(referenceLabel("[draft-yang-tls-hybrid-sm2-mlkem-03]"), "draft-yang-tls-hybrid-sm2-mlkem-03");
   assert.equal(plural(1, "response"), "1 response");
   assert.equal(plural(2, "origin"), "2 origins");
+});
+
+test("HSTS row", () => {
+  const sts = [{ name: "strict-transport-security", value: "max-age=31536000; includeSubDomains; preload" }];
+  const sent = buildView(tab([["main_frame", "https://a.example/", { ...TRAD13, hsts: false }, false, sts]]), "https://a.example/");
+  const row = (v, term) => v.page.rows.find(([t]) => t === term)[1];
+  assert.equal(row(sent, "HSTS"), "Header sent: max-age=31536000 (365 days); includeSubDomains; preload");
+  const none = buildView(tab([["main_frame", "https://a.example/", { ...TRAD13, hsts: false }]]), "https://a.example/");
+  assert.equal(row(none, "HSTS"), "Not used");
 });

@@ -38,6 +38,15 @@ These connections are expected to **fail** in Firefox, because Firefox does not 
 | https://test.openquantumsafe.org:6005/ | SecP384r1MLKEM1024 |
 | https://test.openquantumsafe.org:6026/ | MLKEM768 |
 
+## HSTS
+
+Shown for the page itself, not rated.
+
+| Check | Expected |
+|---|---|
+| Open a site that sends `Strict-Transport-Security`, such as https://github.com/ | **HSTS** shows the header as sent. Compare with the response headers of the page in the Network panel (F12). |
+| Open an https page whose response headers (F12 → Network) have no `Strict-Transport-Security` | **HSTS:** `Not used`, or `Known to Firefox; no header in this response` if Firefox already knows the site |
+
 ## Pages TLSView cannot inspect
 
 | Page | Expected popup message |

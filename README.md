@@ -2,7 +2,7 @@
 
 Firefox extension for checking which TLS version and key exchange a site uses: traditional, PQ/T hybrid, or pure post-quantum (ML-KEM).
 
-**Status:** early development. The toolbar icon shows the page's TLS version and key exchange; the popup lists the TLS setups of every response in the tab.
+**Status:** early development. The toolbar icon shows the page's TLS version and key exchange; the popup lists the TLS setups of every response in the tab. For the page itself, the popup also shows HSTS, without rating it.
 
 ## Requirements
 
