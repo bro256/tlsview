@@ -17,7 +17,7 @@ A changed setting applies to new connections only. After changing one, restart F
 
 | Expected icon | URL | Requires | Tooltip, first line |
 |---|---|---|---|
-| `✕` | http://http.badssl.com/ | – | Not encrypted (no HTTPS) |
+| `✕` | http://http.badssl.com/ | – | No HTTPS: loaded over plain HTTP, without TLS |
 | `1.0` | https://tls-v1-0.badssl.com:1010/ | `enable-deprecated` | TLS 1.0: deprecated |
 | `1.1` | https://tls-v1-1.badssl.com:1011/ | `enable-deprecated` | TLS 1.1: deprecated |
 | `1.2` | https://tls-v1-2.badssl.com:1012/ | – | TLS 1.2: no post-quantum key exchange possible |

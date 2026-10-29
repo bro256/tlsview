@@ -51,7 +51,7 @@ test("every icon the code can choose exists", () => {
 });
 
 test("tooltip first and second lines", () => {
-  assert.equal(page(INSECURE).title, "Not encrypted (no HTTPS)");
+  assert.equal(page(INSECURE).title, "No HTTPS: loaded over plain HTTP, without TLS");
   assert.equal(page(TLS10).title, "TLS 1.0: deprecated\nNo post-quantum key exchange possible");
   assert.equal(page(TLS11).title, "TLS 1.1: deprecated\nNo post-quantum key exchange possible");
   assert.equal(page(TLS12).title, "TLS 1.2: no post-quantum key exchange possible\nKey exchange: P256");
@@ -110,7 +110,7 @@ test("both warning lines when both rules apply", () => {
 test("an HTTP page never warns", () => {
   const i = withOther(INSECURE, TLS10);
   assert.equal(i.path, "icons/step-insecure.svg");
-  assert.equal(i.title, "Not encrypted (no HTTPS)");
+  assert.equal(i.title, "No HTTPS: loaded over plain HTTP, without TLS");
 });
 
 test("plain icon when the page itself was not seen", () => {

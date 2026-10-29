@@ -107,7 +107,7 @@ test("key exchange shows the reported name when the registry does not know it", 
 
 test("page section for plain HTTP and for an unknown key exchange", () => {
   const http = buildView(tab([["main_frame", "http://a.example/", INSECURE]]), "http://a.example/");
-  assert.equal(http.page.headline, "Not encrypted (no HTTPS)");
+  assert.equal(http.page.headline, "No HTTPS: loaded over plain HTTP, without TLS");
   assert.deepEqual(http.page.rows, []);
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
