@@ -8,12 +8,12 @@ Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ), *P
 
 ## Protection levels
 
-The toolbar icon shows the level of the connection that delivered the page itself (the main document). Higher is better.
+The toolbar icon shows the level of the connection that delivered the page itself (the main document). Higher is better. Both post-quantum levels show `PQ`: green for PQ/T hybrid, lavender for pure post-quantum.
 
 | Icon | Level | Meaning |
 |:-:|---|---|
-| <img src="icons/step-pqt.svg" width="24" alt="PQT"> | TLS 1.3 · PQ/T hybrid | ML-KEM combined with ECDH. Designed to remain secure if either component remains secure. |
-| <img src="icons/step-pq.svg" width="24" alt="PQ"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below PQ/T hybrid: with no traditional component, its security rests on ML-KEM alone. |
+| <img src="icons/step-pqt.svg" width="24" alt="PQ, green"> | TLS 1.3 · PQ/T hybrid | ML-KEM combined with ECDH. Designed to remain secure if either component remains secure. |
+| <img src="icons/step-pq.svg" width="24" alt="PQ, lavender"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below PQ/T hybrid: with no traditional component, its security rests on ML-KEM alone. |
 | <img src="icons/step-tls13.svg" width="24" alt="1.3"> | TLS 1.3 · traditional | ECDH or finite field DH only. Not quantum-resistant. |
 | <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not quantum-resistant: Firefox offers ML-KEM groups only in TLS 1.3. RSA key transport (`TLS_RSA_WITH_*` cipher suites, enabled in Firefox by default) has no forward secrecy. |
 | <img src="icons/step-tls11.svg" width="24" alt="1.1"> | TLS 1.1 | Deprecated (RFC 8996). |
@@ -23,7 +23,7 @@ The toolbar icon shows the level of the connection that delivered the page itsel
 
 The order is TLSView's. Some guidance prefers pure ML-KEM: CNSA 2.0 requires ML-KEM-1024 for key establishment.
 
-A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQT with warning">) means other responses in the tab need attention:
+A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ with warning">) means other responses in the tab need attention:
 
 - **Lower protection level:** at least one response in the tab is on a lower level than the page.
 - **Could not be checked:** at least one response is *Not determined*. Not shown when the page itself is *Not determined* or has no HTTPS.

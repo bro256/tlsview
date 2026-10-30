@@ -23,10 +23,10 @@ A changed setting applies to new connections only. After changing one, restart F
 | `1.2` | https://tls-v1-2.badssl.com:1012/ | – | TLS 1.2: no post-quantum key exchange possible |
 | `1.2` | https://static-rsa.badssl.com/ | – | TLS 1.2: no post-quantum key exchange possible; second line: Key exchange: RSA key transport (no forward secrecy); popup: Forward secrecy: No |
 | `1.3` | any site without post-quantum support | – | TLS 1.3: traditional key exchange only |
-| `PQT` | https://pq.cloudflareresearch.com/ | – | X25519MLKEM768 |
-| `PQT` | https://test.openquantumsafe.org:6006/ | certificate exception | X25519MLKEM768 (same server as the `PQ` test: if this works and 6024 does not, the cause is ML-KEM-1024) |
-| `PQ` | https://test.openquantumsafe.org:6024/ | certificate exception, `enable_mlkem1024` | MLKEM1024 |
-| `1.3` or `PQT` | https://test.openquantumsafe.org:6002/ | certificate exception | depends on the server's group order |
+| `PQ` green | https://pq.cloudflareresearch.com/ | – | X25519MLKEM768 |
+| `PQ` green | https://test.openquantumsafe.org:6006/ | certificate exception | X25519MLKEM768 (same server as the lavender `PQ` test: if this works and 6024 does not, the cause is ML-KEM-1024) |
+| `PQ` lavender | https://test.openquantumsafe.org:6024/ | certificate exception, `enable_mlkem1024` | MLKEM1024 |
+| `1.3` or `PQ` green | https://test.openquantumsafe.org:6002/ | certificate exception | depends on the server's group order |
 
 test.openquantumsafe.org is the Open Quantum Safe project's test server. Each port offers one key exchange group; the current list is at https://test.openquantumsafe.org/assignments.json. Its certificates are signed by the project's own test CA, so Firefox shows a security warning: choose **Advanced → Accept the Risk and Continue** for that port. Do not import the test CA into Firefox.
 
@@ -57,7 +57,7 @@ The Network panel (F12 → Network) shows the protocol of each response in the *
 
 | Check | How | Expected |
 |---|---|---|
-| HTTP/3 | Open https://cloudflare.com/, then reload: Firefox may use HTTP/2 first and switch to HTTP/3 once the server advertises it. Check that the page's Protocol is `HTTP/3`. | The page's level and group as over HTTP/2, e.g. `PQT` with X25519MLKEM768. Not `?`. |
+| HTTP/3 | Open https://cloudflare.com/, then reload: Firefox may use HTTP/2 first and switch to HTTP/3 once the server advertises it. Check that the page's Protocol is `HTTP/3`. | The page's level and group as over HTTP/2, e.g. green `PQ` with X25519MLKEM768. Not `?`. |
 | TLS 1.3 resumption | Open a TLS 1.3 site, close the tab, wait more than 115 seconds (`network.http.keep-alive.timeout`) so the connection closes, then open the site again in a new tab. Firefox resumes the session with a stored ticket. | Same level and group as the first visit. Firefox resumes TLS 1.3 only with a new key exchange (`psk_dhe_ke`), so a group is reported. |
 | TLS 1.2 resumption | As above, with https://tls-v1-2.badssl.com:1012/ | `1.2` icon. **Key exchange** may show `not reported` on the resumed connection; **Forward secrecy** stays `Yes` (from the cipher suite). |
 | Responses from cache | Open a site, then open it again in a new tab without Ctrl+F5. | Setups show `from cache` counts with the same levels as on the first visit. |
