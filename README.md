@@ -80,7 +80,7 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit). Shown, not rated. |
 | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used`. Shown, not rated. |
 
-**TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs.
+**TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
 
 ## Install from source
 
