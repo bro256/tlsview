@@ -21,6 +21,8 @@ The toolbar icon shows the level of the connection that delivered the page itsel
 | <img src="icons/step-insecure.svg" width="24" alt="✕"> | No HTTPS | Loaded over plain HTTP, without TLS. |
 | <img src="icons/step-unknown.svg" width="24" alt="?"> | Not determined | TLS version or key exchange group not reported, not recognised, or obsolete. Not ranked. |
 
+The order is TLSView's. Some guidance prefers pure ML-KEM: CNSA 2.0 requires ML-KEM-1024 for key establishment.
+
 A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQT with warning">) means other responses in the tab need attention:
 
 - **Lower protection level:** at least one response in the tab is on a lower level than the page.
@@ -75,7 +77,7 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 
 ## Install from source
 
-Requires Firefox 140 or later (desktop) or 142 or later (Android).
+Requires Firefox 140 or later (desktop).
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on…** and select `manifest.json`.
@@ -96,7 +98,27 @@ npm run build    # packages the extension into web-ext-artifacts/
 - Firefox hides all requests on some Mozilla sites, such as addons.mozilla.org, from extensions. These sites cannot be inspected.
 - A page restored from the back/forward cache sends no requests. If an earlier page in the tab had the same origin, that page's details are shown.
 - Late responses from an earlier page of the same origin are counted for the current page.
+- A response served from Firefox's cache shows the TLS details of the connection that originally fetched it.
+- TLS 1.3 session resumption and 0-RTT early data reuse a secret from an earlier handshake, and 0-RTT data has no forward secrecy. Firefox does not tell extensions whether either was used.
 
 ## Privacy
 
 TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. URLs are stored without query string or fragment. A record is deleted when its tab closes, and all records when Firefox closes.
+
+## References
+
+| Topic | Source |
+|---|---|
+| TLS 1.3 | [RFC 9846](https://www.rfc-editor.org/rfc/rfc9846) |
+| TLS 1.0 and 1.1 deprecation | [RFC 8996](https://www.rfc-editor.org/rfc/rfc8996) |
+| PQ/T hybrid terminology | [RFC 9794](https://www.rfc-editor.org/rfc/rfc9794) |
+| ML-KEM | [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final) |
+| PQ/T hybrid groups for TLS 1.3 | [RFC 10024](https://www.rfc-editor.org/rfc/rfc10024) |
+| Pure ML-KEM groups for TLS 1.3 | [draft-ietf-tls-mlkem](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/) |
+| TLS Supported Groups registry | [IANA](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8) |
+| X25519 | [RFC 7748](https://www.rfc-editor.org/rfc/rfc7748) |
+| FFDHE groups | [RFC 7919](https://www.rfc-editor.org/rfc/rfc7919) |
+| HSTS | [RFC 6797](https://www.rfc-editor.org/rfc/rfc6797) |
+| ECH | [RFC 9849](https://www.rfc-editor.org/rfc/rfc9849) |
+| CNSA 2.0 | [NSA CNSA 2.0 FAQ](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSI_CNSA_2.0_FAQ_.PDF) |
+| Extension API | [webRequest.getSecurityInfo()](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/webRequest/getSecurityInfo) |
