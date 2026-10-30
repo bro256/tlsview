@@ -87,7 +87,7 @@ test("tooltip: headline, key exchange, cipher suite", () => {
 test("lower step: warning icon and line", () => {
   const i = withOther(PQT, TLS12);
   assert.equal(i.path, "icons/step-pqt-warn.svg");
-  assert.match(i.title, /lower protection level than the page$/);
+  assert.match(i.title, /\nWarning: some responses in this tab used a lower level than the page: TLS 1\.2$/);
 });
 
 test("pure post-quantum is lower than PQ/T hybrid", () => {
@@ -117,7 +117,7 @@ test("both warning lines when both rules apply", () => {
     ["image", "https://c.example/i.png", NO_GROUP],
   ]);
   assert.deepEqual(i.title.split("\n").slice(3), [
-    "Warning: some responses in this tab have a lower protection level than the page",
+    "Warning: some responses in this tab used a lower level than the page: TLS 1.2",
     "Warning: some responses in this tab could not be checked",
   ]);
 });

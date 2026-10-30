@@ -25,7 +25,7 @@ The order is TLSView's. Some guidance prefers pure ML-KEM: CNSA 2.0 requires ML-
 
 A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ with warning">) means other responses in the tab need attention:
 
-- **Lower protection level:** at least one response in the tab is on a lower level than the page.
+- **Lower level:** at least one response in the tab is on a lower level than the page. The warning names those levels, e.g. `TLS 1.2, TLS 1.3 · traditional`.
 - **Could not be checked:** at least one response is *Not determined*. Not shown when the page itself is *Not determined* or has no HTTPS.
 
 The tooltip shows the popup's headline, then the key exchange and the cipher suite, then any warnings:

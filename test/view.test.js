@@ -146,7 +146,7 @@ test("warnings without the 'Warning:' prefix", () => {
     ["image", "https://c.example/i.png", NO_GROUP],
   ]), "https://a.example/");
   assert.deepEqual(v.warnings, [
-    "some responses in this tab have a lower protection level than the page",
+    "some responses in this tab used a lower level than the page: TLS 1.2",
     "some responses in this tab could not be checked",
   ]);
 });

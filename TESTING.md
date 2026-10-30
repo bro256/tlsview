@@ -75,7 +75,7 @@ Report the result of each check, including when a group is `not reported`, so RE
 
 ## Behaviour
 
-- **Warning:** on a page whose resources come from servers with different setups, the icon shows the corner mark when any setup is on a lower level, and the popup lists the reason.
+- **Warning:** on a page whose resources come from servers with different setups, the icon shows the corner mark when any setup is on a lower level, and the popup and tooltip name the lower levels.
 - **Live update:** open the popup while a large page is loading; setups and counts update.
 - **Navigation:** open a large page and immediately click a link to another site; the new page's popup does not list the first site's servers.
 - **No query strings:** expand a setup; no URL contains `?`.

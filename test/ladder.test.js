@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { newTabState, recordResponse } from "../lib/tabstate.js";
-import { STEPS, rankOf, stepOf, summarize, setupTitle } from "../lib/ladder.js";
+import { STEPS, rankOf, stepOf, summarize, setupTitle, lowerLevels } from "../lib/ladder.js";
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
 const HYBRID = { ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ECDSA-P256-SHA256" };
@@ -159,4 +159,15 @@ test("an https response reported without TLS is not determined, not plain HTTP",
   ]);
   assert.equal(summary.lowerStep, true);  // the plain HTTP image
   assert.equal(summary.notChecked, true); // the https responses without TLS
+});
+
+test("lower levels are named lowest first, once each", () => {
+  const TLS10 = { state: "secure", protocolVersion: "TLSv1" };
+  const TLS11 = { state: "secure", protocolVersion: "TLSv1.1" };
+  // TLS 1.1 has more responses than TLS 1.0, so a sort by count would put it first.
+  const s = pageWith(HYBRID, TLS12, TRAD13, TLS11, TLS11, TLS10, PURE, TLS12, INSECURE, NO_GROUP);
+  assert.deepEqual(lowerLevels(s),
+    ["No HTTPS", "TLS 1.0", "TLS 1.1", "TLS 1.2", "TLS 1.3 · traditional", "TLS 1.3 · pure post-quantum"]);
+  assert.deepEqual(lowerLevels(pageWith(TRAD13, HYBRID)), []);
+  assert.deepEqual(lowerLevels(pageWith(NO_GROUP, TLS12)), []);
 });

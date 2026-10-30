@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TLSView",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Shows which TLS version and key exchange a site uses: traditional, PQ/T hybrid or pure post-quantum (ML-KEM).",
   "icons": {
     "48": "icons/icon.svg",
