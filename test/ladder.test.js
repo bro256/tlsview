@@ -16,9 +16,12 @@ const TLS12 = {
 const INSECURE = { state: "insecure" };
 
 // Builds a tab state from [type, url, info] rows.
+// Responses without TLS are plain HTTP unless a test says otherwise.
+const urlFor = (url, info) => (info.state === "insecure" ? url.replace(/^https:/, "http:") : url);
+
 function tab(rows) {
   const s = newTabState();
-  for (const [type, url, info] of rows) recordResponse(s, { type, url, fromCache: false }, info);
+  for (const [type, url, info] of rows) recordResponse(s, { type, url: urlFor(url, info), fromCache: false }, info);
   return s;
 }
 const pageWith = (pageInfo, ...others) => summarize(tab([
@@ -139,4 +142,21 @@ test("setup titles", () => {
   assert.equal(title(INSECURE), "No HTTPS");
   assert.equal(title(NO_GROUP), "Not determined · TLSv1.3 · key exchange not reported");
   assert.equal(title({ ...TLS13, keaGroupName: "unknown group" }), "Not determined · TLSv1.3 · unknown group");
+});
+
+test("an https response reported without TLS is not determined, not plain HTTP", () => {
+  const s = newTabState();
+  recordResponse(s, { type: "main_frame", url: "https://a.example/", fromCache: false }, TRAD13);
+  recordResponse(s, { type: "script", url: "https://b.example/x.js", fromCache: false }, INSECURE);
+  recordResponse(s, { type: "script", url: "wss://c.example/ws", fromCache: false }, INSECURE);
+  recordResponse(s, { type: "image", url: "http://d.example/i.png", fromCache: false }, INSECURE);
+  const summary = summarize(s);
+  const steps = summary.setups.map((x) => [x.step, x.count, setupTitle(x)]);
+  assert.deepEqual(steps, [
+    ["insecure", 1, "No HTTPS"],
+    ["tls13-classical", 1, "TLS 1.3 · x25519 · traditional"],
+    ["unknown", 2, "Not determined · HTTPS without TLS details"],
+  ]);
+  assert.equal(summary.lowerStep, true);  // the plain HTTP image
+  assert.equal(summary.notChecked, true); // the https responses without TLS
 });

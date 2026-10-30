@@ -17,9 +17,12 @@ const TLS10 = { state: "secure", protocolVersion: "TLSv1" };
 const TLS11 = { state: "secure", protocolVersion: "TLSv1.1" };
 const INSECURE = { state: "insecure" };
 
+// Responses without TLS are plain HTTP unless a test says otherwise.
+const urlFor = (url, info) => (info.state === "insecure" ? url.replace(/^https:/, "http:") : url);
+
 function icon(rows) {
   const s = newTabState();
-  for (const [type, url, info] of rows) recordResponse(s, { type, url, fromCache: false }, info);
+  for (const [type, url, info] of rows) recordResponse(s, { type, url: urlFor(url, info), fromCache: false }, info);
   return iconFor(summarize(s));
 }
 const page = (info) => icon([["main_frame", "https://a.example/", info]]);
@@ -123,4 +126,12 @@ test("plain icon when the page itself was not seen", () => {
   const i = icon([["image", "https://cdn.example/i.png", PQT]]);
   assert.equal(i.path, PLAIN_ICON);
   assert.match(i.title, /not seen/);
+});
+
+test("an https page reported without TLS: not determined", () => {
+  const s = newTabState();
+  recordResponse(s, { type: "main_frame", url: "https://a.example/", fromCache: false }, INSECURE);
+  const i = iconFor(summarize(s));
+  assert.equal(i.path, "icons/step-unknown.svg");
+  assert.equal(i.title, "Key exchange not determined\nHTTPS, but Firefox reported no TLS details");
 });
