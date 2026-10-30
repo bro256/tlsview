@@ -66,6 +66,7 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 |---|---|
 | Protocol | TLS version |
 | Cipher suite | As reported by Firefox, e.g. `TLS_AES_128_GCM_SHA256` |
+| Encryption | Record encryption from the cipher suite: `AEAD` (GCM, CCM, ChaCha20-Poly1305) or `CBC + HMAC` with the HMAC hash. Firefox does not support encrypt-then-MAC (RFC 7366), so CBC suites use MAC-then-encrypt. Shown, not rated. |
 | Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
 | Key exchange type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
 | Forward secrecy | Yes for TLS 1.3 and for ECDHE or DHE cipher suites; No for RSA key transport. Shown, not rated. |

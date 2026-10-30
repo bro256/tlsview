@@ -57,6 +57,7 @@ test("page section for a PQ/T hybrid page", () => {
   assert.deepEqual(v.page.rows, [
     ["Protocol", "TLS 1.3"],
     ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
+    ["Encryption", "AEAD: AES-128-GCM"],
     ["Key exchange", "X25519MLKEM768 (Firefox: mlkem768x25519)"],
     ["Key exchange type", "PQ/T hybrid: X25519 (traditional) + ML-KEM-768 (post-quantum), RFC 10024"],
     ["Forward secrecy", "Yes"],
@@ -99,13 +100,13 @@ test("headline and key exchange type per step", () => {
 
 test("key exchange shows one name when IANA and Firefox names are equal", () => {
   const v = buildView(tab([["main_frame", "https://a.example/", TRAD13]]), "https://a.example/");
-  assert.deepEqual(v.page.rows[2], ["Key exchange", "x25519"]);
+  assert.deepEqual(v.page.rows[3], ["Key exchange", "x25519"]);
 });
 
 test("key exchange shows the reported name when the registry does not know it", () => {
   const v = buildView(tab([["main_frame", "https://a.example/", { ...TLS13, keaGroupName: "unknown group" }]]),
     "https://a.example/");
-  assert.deepEqual(v.page.rows[2], ["Key exchange", "unknown group"]);
+  assert.deepEqual(v.page.rows[3], ["Key exchange", "unknown group"]);
 });
 
 test("page section for plain HTTP and for an unknown key exchange", () => {
@@ -115,9 +116,9 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Cipher suite", "Key exchange", "Forward secrecy", "Signature scheme", "HSTS", "ECH"]);
-  assert.deepEqual(unknown.page.rows[2], ["Key exchange", "not reported"]);
-  assert.deepEqual(unknown.page.rows[3], ["Forward secrecy", "not determined"]);
+  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "Key exchange", "Forward secrecy", "Signature scheme", "HSTS", "ECH"]);
+  assert.deepEqual(unknown.page.rows[3], ["Key exchange", "not reported"]);
+  assert.deepEqual(unknown.page.rows[4], ["Forward secrecy", "not determined"]);
 });
 
 test("setups are listed lowest first with counts and URLs", () => {
@@ -183,9 +184,10 @@ test("ECH row", () => {
 test("RSA key transport: key exchange row", () => {
   const info = { state: "secure", protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" };
   const v = buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/");
-  assert.deepEqual(v.page.rows.slice(0, 4), [
+  assert.deepEqual(v.page.rows.slice(0, 5), [
     ["Protocol", "TLS 1.2"],
     ["Cipher suite", "TLS_RSA_WITH_AES_128_GCM_SHA256"],
+    ["Encryption", "AEAD: AES-128-GCM"],
     ["Key exchange", "RSA key transport"],
     ["Forward secrecy", "No"],
   ]);

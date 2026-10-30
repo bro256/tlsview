@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GROUPS, FIREFOX_SPECIAL } from "../lib/groups.js";
-import { classifyGroup, isRsaKeyTransport, forwardSecrecy } from "../lib/classify.js";
+import { classifyGroup, isRsaKeyTransport, forwardSecrecy, recordEncryption } from "../lib/classify.js";
 
 // Every name getKeaGroupName() in Firefox can return (nsNSSCallbacks.cpp),
 // and the expected mode.
@@ -108,4 +108,23 @@ test("forward secrecy", () => {
   assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" }), false);
   assert.equal(forwardSecrecy({ protocolVersion: "TLSv1", cipherSuite: "TLS_RSA_WITH_AES_128_CBC_SHA" }), false);
   assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.2", cipherSuite: null }), null);
+});
+
+test("record encryption from the cipher suite", () => {
+  const cases = {
+    TLS_AES_128_GCM_SHA256: "AEAD: AES-128-GCM",
+    TLS_AES_256_GCM_SHA384: "AEAD: AES-256-GCM",
+    TLS_CHACHA20_POLY1305_SHA256: "AEAD: ChaCha20-Poly1305",
+    TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256: "AEAD: ChaCha20-Poly1305",
+    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256: "AEAD: AES-128-GCM",
+    TLS_RSA_WITH_AES_256_GCM_SHA384: "AEAD: AES-256-GCM",
+    TLS_AES_128_CCM_8_SHA256: "AEAD: AES-128-CCM-8",
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA: "CBC + HMAC: AES-128-CBC, HMAC-SHA1",
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA: "CBC + HMAC: AES-256-CBC, HMAC-SHA1",
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA: "CBC + HMAC: 3DES-EDE-CBC, HMAC-SHA1",
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256: "CBC + HMAC: AES-128-CBC, HMAC-SHA256",
+  };
+  for (const [suite, expected] of Object.entries(cases)) assert.equal(recordEncryption(suite), expected, suite);
+  assert.equal(recordEncryption("TLS_RSA_WITH_RC4_128_SHA"), null);
+  assert.equal(recordEncryption(null), null);
 });
