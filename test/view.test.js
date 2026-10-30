@@ -5,11 +5,11 @@ import { buildView, protocolLabel, referenceLabel, plural } from "../lib/view.js
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
 const PQT = {
-  ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256",
+  ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ECDSA-P256-SHA256",
   hsts: true, usedEch: false,
 };
 const PURE = { ...TLS13, keaGroupName: "mlkem1024" };
-const TRAD13 = { ...TLS13, keaGroupName: "x25519", signatureSchemeName: "rsa_pss_rsae_sha256" };
+const TRAD13 = { ...TLS13, keaGroupName: "x25519", signatureSchemeName: "RSA-PSS-SHA256" };
 const NO_GROUP = { ...TLS13, keaGroupName: null };
 const TLS12 = {
   state: "secure", protocolVersion: "TLSv1.2", keaGroupName: "P256",
@@ -53,7 +53,7 @@ test("page section for a PQ/T hybrid page", () => {
   assert.equal(v.status, "ok");
   assert.equal(v.origin, "https://a.example");
   assert.equal(v.page.icon, "icons/step-pqt.svg");
-  assert.equal(v.page.headline, "TLS 1.3 · PQ/T hybrid key exchange (quantum-resistant)");
+  assert.equal(v.page.headline, "TLS 1.3 · PQ/T hybrid key exchange");
   assert.deepEqual(v.page.rows, [
     ["Protocol", "TLS 1.3"],
     ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
@@ -61,7 +61,7 @@ test("page section for a PQ/T hybrid page", () => {
     ["Key exchange", "X25519MLKEM768 (Firefox: mlkem768x25519)"],
     ["Key exchange type", "PQ/T hybrid: X25519 (traditional) + ML-KEM-768 (post-quantum), RFC 10024"],
     ["Forward secrecy", "Yes"],
-    ["Signature scheme", "ecdsa_secp256r1_sha256"],
+    ["Handshake signature", "ECDSA-P256-SHA256 (traditional)"],
     ["HSTS", "Known to Firefox; no header in this response"],
     ["ECH", "Not used"],
   ]);
@@ -71,22 +71,22 @@ test("page section for a PQ/T hybrid page", () => {
 // Headline and key exchange type for every kind of page.
 test("headline and key exchange type per step", () => {
   const cases = [
-    [PURE, "TLS 1.3 · post-quantum key exchange (quantum-resistant)",
+    [PURE, "TLS 1.3 · pure post-quantum key exchange",
       "Post-quantum: ML-KEM-1024, draft-ietf-tls-mlkem (approved, not yet an RFC)"],
-    [TRAD13, "TLS 1.3 · traditional key exchange (not quantum-resistant)",
+    [TRAD13, "TLS 1.3 · traditional key exchange (not post-quantum)",
       "Traditional: X25519, RFC 9846; RFC 8422"],
-    [TLS12, "TLS 1.2 · traditional key exchange (not quantum-resistant)",
+    [TLS12, "TLS 1.2 · traditional key exchange (not post-quantum)",
       "Traditional: P-256, RFC 8422"],
-    [{ ...TLS12, keaGroupName: "none" }, "TLS 1.2 · traditional key exchange (not quantum-resistant)",
+    [{ ...TLS12, keaGroupName: "none" }, "TLS 1.2 · traditional key exchange (not post-quantum)",
       "No key exchange group reported (for example, RSA key transport)"],
-    [{ ...TLS12, keaGroupName: "custom" }, "TLS 1.2 · traditional key exchange (not quantum-resistant)",
+    [{ ...TLS12, keaGroupName: "custom" }, "TLS 1.2 · traditional key exchange (not post-quantum)",
       "Traditional: finite field DH with a custom prime"],
     [{ state: "secure", protocolVersion: "TLSv1", keaGroupName: "P256" }, "TLS 1.0 · deprecated protocol",
       "Traditional: P-256, RFC 8422"],
     [{ ...TLS13, keaGroupName: "xyber768d00" }, "Key exchange not determined",
       "Obsolete pre-standard hybrid (X25519 + Kyber768 round 3); not supported by current Firefox"],
     [{ ...TLS12, keaGroupName: null, cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" },
-      "TLS 1.2 · traditional key exchange (not quantum-resistant)", undefined],
+      "TLS 1.2 · traditional key exchange (not post-quantum)", undefined],
     [{ ...TLS13, keaGroupName: "none" }, "Key exchange not determined", "No key exchange group reported"],
     [NO_GROUP, "Key exchange not determined", undefined],
   ];
@@ -116,7 +116,7 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "Key exchange", "Forward secrecy", "Signature scheme", "HSTS", "ECH"]);
+  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "Key exchange", "Forward secrecy", "Handshake signature", "HSTS", "ECH"]);
   assert.deepEqual(unknown.page.rows[3], ["Key exchange", "not reported"]);
   assert.deepEqual(unknown.page.rows[4], ["Forward secrecy", "not determined"]);
 });
@@ -191,4 +191,12 @@ test("RSA key transport: key exchange row", () => {
     ["Key exchange", "RSA key transport"],
     ["Forward secrecy", "No"],
   ]);
+});
+
+test("handshake signature row shows the kind", () => {
+  const row = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
+    .page.rows.find(([t]) => t === "Handshake signature")[1];
+  assert.equal(row({ ...TRAD13, signatureSchemeName: "ML-DSA-65" }), "ML-DSA-65 (post-quantum)");
+  assert.equal(row({ ...TRAD13, signatureSchemeName: "unknown signature" }), "unknown signature");
+  assert.equal(row({ ...TRAD13, signatureSchemeName: undefined }), "not reported");
 });

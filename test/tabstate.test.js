@@ -16,7 +16,7 @@ const HYBRID = {
   state: "secure",
   protocolVersion: "TLSv1.3",
   keaGroupName: "mlkem768x25519",
-  signatureSchemeName: "ecdsa_secp256r1_sha256",
+  signatureSchemeName: "ECDSA-P256-SHA256",
   cipherSuite: "TLS_AES_128_GCM_SHA256",
 };
 const CLASSICAL = { ...HYBRID, keaGroupName: "x25519" };
@@ -48,7 +48,7 @@ test("records the main frame with its signature", () => {
   recordResponse(s, r("main_frame", "https://example.com/page?x=1"), HYBRID);
   assert.equal(s.pageOrigin, "https://example.com");
   assert.deepEqual(s.mainFrame, {
-    ...setupOf(HYBRID), signatureSchemeName: "ecdsa_secp256r1_sha256",
+    ...setupOf(HYBRID), signatureSchemeName: "ECDSA-P256-SHA256",
     hsts: null, usedEch: null, hstsHeader: null,
   });
 });
@@ -68,8 +68,8 @@ test("groups responses by TLS version, key exchange group and cipher suite", () 
 test("the signature scheme does not split a setup", () => {
   const s = newTabState();
   recordResponse(s, r("image", "https://a.example/1.png"), HYBRID);
-  recordResponse(s, r("image", "https://b.example/2.png"), { ...HYBRID, signatureSchemeName: "rsa_pss_rsae_sha256" });
-  assert.deepEqual(only(s).signatures, { ecdsa_secp256r1_sha256: 1, rsa_pss_rsae_sha256: 1 });
+  recordResponse(s, r("image", "https://b.example/2.png"), { ...HYBRID, signatureSchemeName: "RSA-PSS-SHA256" });
+  assert.deepEqual(only(s).signatures, { "ECDSA-P256-SHA256": 1, "RSA-PSS-SHA256": 1 });
 });
 
 test("counts responses and cached responses", () => {

@@ -4,7 +4,7 @@ import { newTabState, recordResponse } from "../lib/tabstate.js";
 import { STEPS, rankOf, stepOf, summarize, setupTitle } from "../lib/ladder.js";
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
-const HYBRID = { ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ecdsa_secp256r1_sha256" };
+const HYBRID = { ...TLS13, keaGroupName: "mlkem768x25519", signatureSchemeName: "ECDSA-P256-SHA256" };
 const PURE = { ...TLS13, keaGroupName: "mlkem1024" };
 const TRAD13 = { ...TLS13, keaGroupName: "x25519" };
 const KYBER = { ...TLS13, keaGroupName: "xyber768d00" };

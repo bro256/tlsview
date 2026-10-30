@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GROUPS, FIREFOX_SPECIAL } from "../lib/groups.js";
-import { classifyGroup, isRsaKeyTransport, forwardSecrecy, recordEncryption } from "../lib/classify.js";
+import { classifyGroup, isRsaKeyTransport, forwardSecrecy, recordEncryption, signatureKind } from "../lib/classify.js";
 
 // Every name getKeaGroupName() in Firefox can return (nsNSSCallbacks.cpp),
 // and the expected mode.
@@ -127,4 +127,14 @@ test("record encryption from the cipher suite", () => {
   for (const [suite, expected] of Object.entries(cases)) assert.equal(recordEncryption(suite), expected, suite);
   assert.equal(recordEncryption("TLS_RSA_WITH_RC4_128_SHA"), null);
   assert.equal(recordEncryption(null), null);
+});
+
+test("signature scheme kind, by the names Firefox reports", () => {
+  for (const n of ["ECDSA-P256-SHA256", "ECDSA-P384-SHA384", "ECDSA-P521-SHA512", "RSA-PSS-SHA256",
+    "RSA-PKCS1-SHA256", "ECDSA-SHA1", "RSA-PKCS1-SHA1", "RSA-PKCS1-SHA1MD5"]) {
+    assert.equal(signatureKind(n), "traditional", n);
+  }
+  for (const n of ["ML-DSA-44", "ML-DSA-65", "ML-DSA-87"]) assert.equal(signatureKind(n), "post-quantum", n);
+  assert.equal(signatureKind("unknown signature"), null);
+  assert.equal(signatureKind(null), null);
 });

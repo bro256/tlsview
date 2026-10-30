@@ -14,8 +14,8 @@ The toolbar icon shows the level of the connection that delivered the page itsel
 |:-:|---|---|
 | <img src="icons/step-pqt.svg" width="24" alt="PQ, green"> | TLS 1.3 · PQ/T hybrid | ML-KEM combined with ECDH. Designed to remain secure if either component remains secure. |
 | <img src="icons/step-pq.svg" width="24" alt="PQ, lavender"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below PQ/T hybrid: with no traditional component, its security rests on ML-KEM alone. |
-| <img src="icons/step-tls13.svg" width="24" alt="1.3"> | TLS 1.3 · traditional | ECDH or finite field DH only. Not quantum-resistant. |
-| <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not quantum-resistant: Firefox offers ML-KEM groups only in TLS 1.3. RSA key transport (`TLS_RSA_WITH_*` cipher suites, enabled in Firefox by default) has no forward secrecy. |
+| <img src="icons/step-tls13.svg" width="24" alt="1.3"> | TLS 1.3 · traditional | ECDH or finite field DH only. Not post-quantum. |
+| <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not post-quantum: Firefox offers ML-KEM groups only in TLS 1.3. RSA key transport (`TLS_RSA_WITH_*` cipher suites, enabled in Firefox by default) has no forward secrecy. |
 | <img src="icons/step-tls11.svg" width="24" alt="1.1"> | TLS 1.1 | Deprecated (RFC 8996). |
 | <img src="icons/step-tls10.svg" width="24" alt="1.0"> | TLS 1.0 | Deprecated (RFC 8996). |
 | <img src="icons/step-insecure.svg" width="24" alt="✕"> | No HTTPS | Loaded over plain HTTP, without TLS. |
@@ -31,7 +31,7 @@ A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ
 The tooltip shows the popup's headline, then the key exchange and the cipher suite, then any warnings:
 
 ```
-TLS 1.3 · PQ/T hybrid key exchange (quantum-resistant)
+TLS 1.3 · PQ/T hybrid key exchange
 Key exchange: X25519MLKEM768
 Cipher suite: TLS_AES_128_GCM_SHA256
 ```
@@ -76,7 +76,7 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 | Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
 | Key exchange type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
 | Forward secrecy | Yes for TLS 1.3 and for ECDHE or DHE cipher suites; No for RSA key transport. Shown, not rated. |
-| Signature scheme | TLS signature scheme of the handshake. Shown, not rated. |
+| Handshake signature | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2), as Firefox names it, with its kind: `traditional` (RSA, ECDSA) or `post-quantum` (ML-DSA, FIPS 204). Not the certificate's key or its CA signature. Shown, not rated. |
 | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit). Shown, not rated. |
 | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used`. Shown, not rated. |
 
@@ -120,6 +120,7 @@ TLSView collects and transmits no data. Each tab's record is kept in `storage.se
 | TLS 1.0 and 1.1 deprecation | [RFC 8996](https://www.rfc-editor.org/rfc/rfc8996) |
 | PQ/T hybrid terminology | [RFC 9794](https://www.rfc-editor.org/rfc/rfc9794) |
 | ML-KEM | [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final) |
+| ML-DSA | [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final) |
 | PQ/T hybrid groups for TLS 1.3 | [RFC 10024](https://www.rfc-editor.org/rfc/rfc10024) |
 | Pure ML-KEM groups for TLS 1.3 | [draft-ietf-tls-mlkem](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/) |
 | TLS Supported Groups registry | [IANA](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8) |

@@ -57,23 +57,23 @@ test("tooltip: headline, key exchange, cipher suite", () => {
   const AES128 = "TLS_AES_128_GCM_SHA256";
   assert.equal(page(INSECURE).title, "No HTTPS: loaded over plain HTTP, without TLS");
   assert.equal(page(PQT).title,
-    `TLS 1.3 · PQ/T hybrid key exchange (quantum-resistant)\nKey exchange: X25519MLKEM768\nCipher suite: ${AES128}`);
+    `TLS 1.3 · PQ/T hybrid key exchange\nKey exchange: X25519MLKEM768\nCipher suite: ${AES128}`);
   assert.equal(page(PQ).title,
-    `TLS 1.3 · post-quantum key exchange (quantum-resistant)\nKey exchange: MLKEM1024\nCipher suite: ${AES128}`);
+    `TLS 1.3 · pure post-quantum key exchange\nKey exchange: MLKEM1024\nCipher suite: ${AES128}`);
   assert.equal(page(TRAD13).title,
-    `TLS 1.3 · traditional key exchange (not quantum-resistant)\nKey exchange: x25519\nCipher suite: ${AES128}`);
+    `TLS 1.3 · traditional key exchange (not post-quantum)\nKey exchange: x25519\nCipher suite: ${AES128}`);
   const ECDHE12 = { ...TLS12, cipherSuite: "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" };
   assert.equal(page(ECDHE12).title,
-    "TLS 1.2 · traditional key exchange (not quantum-resistant)\nKey exchange: secp256r1\nCipher suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256");
+    "TLS 1.2 · traditional key exchange (not post-quantum)\nKey exchange: secp256r1\nCipher suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256");
   const RSA12 = { state: "secure", protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" };
   assert.equal(page(RSA12).title,
-    "TLS 1.2 · traditional key exchange (not quantum-resistant)\nKey exchange: RSA key transport (no forward secrecy)\n" +
+    "TLS 1.2 · traditional key exchange (not post-quantum)\nKey exchange: RSA key transport (no forward secrecy)\n" +
     "Cipher suite: TLS_RSA_WITH_AES_128_GCM_SHA256");
   assert.equal(page({ ...RSA12, protocolVersion: "TLSv1", cipherSuite: "TLS_RSA_WITH_AES_128_CBC_SHA" }).title,
     "TLS 1.0 · deprecated protocol\nKey exchange: RSA key transport (no forward secrecy)\nCipher suite: TLS_RSA_WITH_AES_128_CBC_SHA");
   assert.equal(page(TLS11).title, "TLS 1.1 · deprecated protocol\nKey exchange: not reported\nCipher suite: not reported");
   assert.equal(page({ ...TLS12, keaGroupName: "custom", cipherSuite: "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" }).title,
-    "TLS 1.2 · traditional key exchange (not quantum-resistant)\nKey exchange: Finite field DH with a custom prime\n" +
+    "TLS 1.2 · traditional key exchange (not post-quantum)\nKey exchange: Finite field DH with a custom prime\n" +
     "Cipher suite: TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
   assert.equal(page(KYBER).title,
     "Key exchange not determined\nTLS 1.3, obsolete group: X25519Kyber768Draft00 (not supported by current Firefox)");
