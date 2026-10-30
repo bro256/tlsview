@@ -51,7 +51,9 @@ function keepNamesTogether(text) {
 function renderDetails(section) {
   const rows = [];
   for (const [term, value] of section.rows) {
-    rows.push(el("dt", { text: term }), el("dd", {}, keepNamesTogether(value)));
+    // Cipher suite names have no spaces; keep them on one line.
+    const nowrap = term === "Cipher suite" ? { className: "nowrap" } : {};
+    rows.push(el("dt", { text: term }), el("dd", nowrap, keepNamesTogether(value)));
   }
   return [el("h3", { text: section.title }), el("dl", {}, rows)];
 }
@@ -67,10 +69,22 @@ function renderPage(page) {
   ]);
 }
 
+// A warning line; the level names after ": " (e.g. "TLS 1.3 · traditional")
+// are each kept on one line.
+function renderWarning(text) {
+  const [message, levels] = text.split(": ");
+  if (!levels) return el("p", { text: "Warning: " + text });
+  const parts = [document.createTextNode(`Warning: ${message}: `)];
+  levels.split(", ").forEach((level, i) => {
+    if (i) parts.push(document.createTextNode(", "));
+    parts.push(el("span", { className: "nowrap", text: level }));
+  });
+  return el("p", {}, parts);
+}
+
 function renderWarnings(warnings) {
   if (!warnings.length) return null;
-  return el("div", { className: "warnings", role: "status" },
-    warnings.map((w) => el("p", { text: "Warning: " + w })));
+  return el("div", { className: "warnings", role: "status" }, warnings.map(renderWarning));
 }
 
 function renderSetup(setup) {
