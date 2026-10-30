@@ -51,6 +51,20 @@ Shown for the page itself, not rated.
 
 Firefox gets a site's ECH key from its DNS HTTPS record. Without DNS over HTTPS, whether that record can be read depends on the operating system and DNS server; on Windows 10, Firefox does not query it from the system DNS. If ECH is never used, turn on DNS over HTTPS (Settings → Privacy & Security), restart Firefox and retry.
 
+## Connections Firefox reuses or reports differently
+
+The Network panel (F12 → Network) shows the protocol of each response in the **Protocol** column (add it by right-clicking a column header).
+
+| Check | How | Expected |
+|---|---|---|
+| HTTP/3 | Open https://cloudflare.com/, then reload: Firefox may use HTTP/2 first and switch to HTTP/3 once the server advertises it. Check that the page's Protocol is `HTTP/3`. | The page's level and group as over HTTP/2, e.g. `PQT` with X25519MLKEM768. Not `?`. |
+| TLS 1.3 resumption | Open a TLS 1.3 site, close the tab, wait more than 115 seconds (`network.http.keep-alive.timeout`) so the connection closes, then open the site again in a new tab. Firefox resumes the session with a stored ticket. | Same level and group as the first visit. Firefox resumes TLS 1.3 only with a new key exchange (`psk_dhe_ke`), so a group is reported. |
+| TLS 1.2 resumption | As above, with https://tls-v1-2.badssl.com:1012/ | `1.2` icon. **Key exchange** may show `not reported` on the resumed connection; **Forward secrecy** stays `Yes` (from the cipher suite). |
+| Responses from cache | Open a site, then open it again in a new tab without Ctrl+F5. | Setups show `from cache` counts with the same levels as on the first visit. |
+| HTTPS without TLS details | Not reproducible on demand; Firefox reports it for example when a request is aborted before validation. If a setup titled `Not determined · HTTPS without TLS details` appears, note the URL, the response status and whether it came from cache, and report it. | Never shown as `✕` (No HTTPS). |
+
+Report the result of each check, including when a group is `not reported`, so README limitations can say what was observed.
+
 ## Pages TLSView cannot inspect
 
 | Page | Expected popup message |
