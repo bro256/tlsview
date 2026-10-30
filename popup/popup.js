@@ -48,18 +48,22 @@ function keepNamesTogether(text) {
       : document.createTextNode(part));
 }
 
-function renderPage(page) {
+function renderDetails(section) {
   const rows = [];
-  for (const [term, value] of page.rows) {
+  for (const [term, value] of section.rows) {
     rows.push(el("dt", { text: term }), el("dd", {}, keepNamesTogether(value)));
   }
+  return [el("h3", { text: section.title }), el("dl", {}, rows)];
+}
+
+function renderPage(page) {
   return el("section", {}, [
     el("h2", {}, [el("span", { text: "This page" })]),
     el("div", { className: "page-head" }, [
       el("img", { src: iconSrc(page.icon), alt: "" }),
       el("span", { className: "label", text: page.headline }),
     ]),
-    el("dl", {}, rows),
+    ...page.sections.flatMap(renderDetails),
   ]);
 }
 

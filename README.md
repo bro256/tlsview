@@ -66,19 +66,20 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 
 ## Popup
 
-**This page** shows the page's own connection:
+**This page** shows the page's own connection, in four sections. Only the key exchange is rated; everything else is shown, not rated.
 
-| Row | Content |
-|---|---|
-| Protocol | TLS version |
-| Cipher suite | As reported by Firefox, e.g. `TLS_AES_128_GCM_SHA256` |
-| Encryption | Record encryption from the cipher suite: `AEAD` (GCM, CCM, ChaCha20-Poly1305) or `CBC + HMAC` with the HMAC hash. Firefox does not support encrypt-then-MAC (RFC 7366), so CBC suites use MAC-then-encrypt. Shown, not rated. |
-| Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
-| Key exchange type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
-| Forward secrecy | Yes for TLS 1.3 and for ECDHE or DHE cipher suites; No for RSA key transport. Shown, not rated. |
-| Handshake signature | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2), as Firefox names it, with its kind: `traditional` (RSA, ECDSA) or `post-quantum` (ML-DSA, FIPS 204). Not the certificate's key or its CA signature. Shown, not rated. |
-| HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit). Shown, not rated. |
-| ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used`. Shown, not rated. |
+| Section | Row | Content |
+|---|---|---|
+| Connection | Protocol | TLS version |
+| | Cipher suite | As reported by Firefox, e.g. `TLS_AES_128_GCM_SHA256` |
+| | Encryption | Record encryption from the cipher suite: `AES-128-GCM`, `ChaCha20-Poly1305`, or for CBC suites the cipher and HMAC, e.g. `AES-128-CBC + HMAC-SHA1` |
+| | AEAD | `Yes` for GCM, CCM and ChaCha20-Poly1305; `No` for CBC. Firefox does not support encrypt-then-MAC (RFC 7366), so CBC suites use MAC-then-encrypt. |
+| Key exchange | Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
+| | Type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
+| | Forward secrecy | `Yes` for TLS 1.3 and for ECDHE or DHE cipher suites; `No` for RSA key transport |
+| Authentication | Handshake signature | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2), as Firefox names it, with its kind: `traditional` (RSA, ECDSA) or `post-quantum` (ML-DSA, FIPS 204). Not the certificate's key or its CA signature. |
+| Other | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
+| | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit) |
 
 **TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
 

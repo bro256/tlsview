@@ -17,6 +17,9 @@ const TLS12 = {
 };
 const INSECURE = { state: "insecure" };
 
+// All rows of the page section, in order, across its sub-sections.
+const rows = (v) => v.page.sections.flatMap((section) => section.rows);
+
 function tab(rows) {
   const s = newTabState();
   for (const [type, url, info, fromCache = false, responseHeaders = []] of rows) {
@@ -54,16 +57,25 @@ test("page section for a PQ/T hybrid page", () => {
   assert.equal(v.origin, "https://a.example");
   assert.equal(v.page.icon, "icons/step-pqt.svg");
   assert.equal(v.page.headline, "TLS 1.3 · PQ/T hybrid key exchange");
-  assert.deepEqual(v.page.rows, [
-    ["Protocol", "TLS 1.3"],
-    ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
-    ["Encryption", "AEAD: AES-128-GCM"],
-    ["Key exchange", "X25519MLKEM768 (Firefox: mlkem768x25519)"],
-    ["Key exchange type", "PQ/T hybrid: X25519 (traditional) + ML-KEM-768 (post-quantum), RFC 10024"],
-    ["Forward secrecy", "Yes"],
-    ["Handshake signature", "ECDSA-P256-SHA256 (traditional)"],
-    ["HSTS", "Known to Firefox; no header in this response"],
-    ["ECH", "Not used"],
+  assert.deepEqual(v.page.sections, [
+    { title: "Connection", rows: [
+      ["Protocol", "TLS 1.3"],
+      ["Cipher suite", "TLS_AES_128_GCM_SHA256"],
+      ["Encryption", "AES-128-GCM"],
+      ["AEAD", "Yes"],
+    ] },
+    { title: "Key exchange", rows: [
+      ["Key exchange", "X25519MLKEM768 (Firefox: mlkem768x25519)"],
+      ["Type", "PQ/T hybrid: X25519 (traditional) + ML-KEM-768 (post-quantum), RFC 10024"],
+      ["Forward secrecy", "Yes"],
+    ] },
+    { title: "Authentication", rows: [
+      ["Handshake signature", "ECDSA-P256-SHA256 (traditional)"],
+    ] },
+    { title: "Other", rows: [
+      ["ECH", "Not used"],
+      ["HSTS", "Known to Firefox; no header in this response"],
+    ] },
   ]);
   assert.deepEqual(v.warnings, []);
 });
@@ -93,32 +105,32 @@ test("headline and key exchange type per step", () => {
   for (const [info, expectedHeadline, expectedType] of cases) {
     const v = buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/");
     assert.equal(v.page.headline, expectedHeadline, JSON.stringify(info));
-    const type = v.page.rows.find(([term]) => term === "Key exchange type");
+    const type = rows(v).find(([term]) => term === "Type");
     assert.equal(type?.[1], expectedType, JSON.stringify(info));
   }
 });
 
 test("key exchange shows one name when IANA and Firefox names are equal", () => {
   const v = buildView(tab([["main_frame", "https://a.example/", TRAD13]]), "https://a.example/");
-  assert.deepEqual(v.page.rows[3], ["Key exchange", "x25519"]);
+  assert.deepEqual(rows(v)[4], ["Key exchange", "x25519"]);
 });
 
 test("key exchange shows the reported name when the registry does not know it", () => {
   const v = buildView(tab([["main_frame", "https://a.example/", { ...TLS13, keaGroupName: "unknown group" }]]),
     "https://a.example/");
-  assert.deepEqual(v.page.rows[3], ["Key exchange", "unknown group"]);
+  assert.deepEqual(rows(v)[4], ["Key exchange", "unknown group"]);
 });
 
 test("page section for plain HTTP and for an unknown key exchange", () => {
   const http = buildView(tab([["main_frame", "http://a.example/", INSECURE]]), "http://a.example/");
   assert.equal(http.page.headline, "No HTTPS: loaded over plain HTTP, without TLS");
-  assert.deepEqual(http.page.rows, []);
+  assert.deepEqual(http.page.sections, []);
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(unknown.page.rows.map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "Key exchange", "Forward secrecy", "Handshake signature", "HSTS", "ECH"]);
-  assert.deepEqual(unknown.page.rows[3], ["Key exchange", "not reported"]);
-  assert.deepEqual(unknown.page.rows[4], ["Forward secrecy", "not determined"]);
+  assert.deepEqual(rows(unknown).map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "AEAD", "Key exchange", "Forward secrecy", "Handshake signature", "ECH", "HSTS"]);
+  assert.deepEqual(rows(unknown)[4], ["Key exchange", "not reported"]);
+  assert.deepEqual(rows(unknown)[5], ["Forward secrecy", "not determined"]);
 });
 
 test("setups are listed lowest first with counts and URLs", () => {
@@ -167,7 +179,7 @@ test("labels", () => {
 test("HSTS row", () => {
   const sts = [{ name: "strict-transport-security", value: "max-age=31536000; includeSubDomains; preload" }];
   const sent = buildView(tab([["main_frame", "https://a.example/", { ...TRAD13, hsts: false }, false, sts]]), "https://a.example/");
-  const row = (v, term) => v.page.rows.find(([t]) => t === term)[1];
+  const row = (v, term) => rows(v).find(([t]) => t === term)[1];
   assert.equal(row(sent, "HSTS"), "Header sent: max-age=31536000 (365 days); includeSubDomains; preload");
   const none = buildView(tab([["main_frame", "https://a.example/", { ...TRAD13, hsts: false }]]), "https://a.example/");
   assert.equal(row(none, "HSTS"), "Not used");
@@ -175,7 +187,7 @@ test("HSTS row", () => {
 
 test("ECH row", () => {
   const row = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
-    .page.rows.find(([t]) => t === "ECH")[1];
+    .page.sections.flatMap((x) => x.rows).find(([t]) => t === "ECH")[1];
   assert.equal(row({ ...TRAD13, usedEch: true }), "Used");
   assert.equal(row({ ...TRAD13, usedEch: false }), "Not used");
   assert.equal(row(TRAD13), "not reported");
@@ -184,10 +196,11 @@ test("ECH row", () => {
 test("RSA key transport: key exchange row", () => {
   const info = { state: "secure", protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" };
   const v = buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/");
-  assert.deepEqual(v.page.rows.slice(0, 5), [
+  assert.deepEqual(rows(v).slice(0, 6), [
     ["Protocol", "TLS 1.2"],
     ["Cipher suite", "TLS_RSA_WITH_AES_128_GCM_SHA256"],
-    ["Encryption", "AEAD: AES-128-GCM"],
+    ["Encryption", "AES-128-GCM"],
+    ["AEAD", "Yes"],
     ["Key exchange", "RSA key transport"],
     ["Forward secrecy", "No"],
   ]);
@@ -195,7 +208,7 @@ test("RSA key transport: key exchange row", () => {
 
 test("handshake signature row shows the kind", () => {
   const row = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
-    .page.rows.find(([t]) => t === "Handshake signature")[1];
+    .page.sections.flatMap((x) => x.rows).find(([t]) => t === "Handshake signature")[1];
   assert.equal(row({ ...TRAD13, signatureSchemeName: "ML-DSA-65" }), "ML-DSA-65 (post-quantum)");
   assert.equal(row({ ...TRAD13, signatureSchemeName: "unknown signature" }), "unknown signature");
   assert.equal(row({ ...TRAD13, signatureSchemeName: undefined }), "not reported");
