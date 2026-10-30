@@ -15,11 +15,11 @@ The toolbar icon shows the level of the connection that delivered the page itsel
 | <img src="icons/step-pqt.svg" width="24" alt="PQT"> | TLS 1.3 · PQ/T hybrid | ML-KEM combined with ECDH. Designed to remain secure if either component remains secure. |
 | <img src="icons/step-pq.svg" width="24" alt="PQ"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below PQ/T hybrid: with no traditional component, its security rests on ML-KEM alone. |
 | <img src="icons/step-tls13.svg" width="24" alt="1.3"> | TLS 1.3 · traditional | ECDH or finite field DH only. Not quantum-resistant. |
-| <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not quantum-resistant: Firefox offers ML-KEM groups only in TLS 1.3. |
+| <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not quantum-resistant: Firefox offers ML-KEM groups only in TLS 1.3. RSA key transport (`TLS_RSA_WITH_*` cipher suites, enabled in Firefox by default) has no forward secrecy. |
 | <img src="icons/step-tls11.svg" width="24" alt="1.1"> | TLS 1.1 | Deprecated (RFC 8996). |
 | <img src="icons/step-tls10.svg" width="24" alt="1.0"> | TLS 1.0 | Deprecated (RFC 8996). |
 | <img src="icons/step-insecure.svg" width="24" alt="✕"> | No HTTPS | Loaded over plain HTTP, without TLS. |
-| <img src="icons/step-unknown.svg" width="24" alt="?"> | Not determined | TLS version or key exchange group not reported or not recognised. Not ranked. |
+| <img src="icons/step-unknown.svg" width="24" alt="?"> | Not determined | TLS version or key exchange group not reported, not recognised, or obsolete. Not ranked. |
 
 A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQT with warning">) means other responses in the tab need attention:
 
@@ -38,12 +38,12 @@ Groups are identified by their [IANA TLS Supported Groups](https://www.iana.org/
 | SecP256r1MLKEM768 | `secp256r1mlkem768` | PQ/T hybrid, ML-KEM-768 (category 3) + P-256 | no |
 | SecP384r1MLKEM1024 | `secp384r1mlkem1024` | PQ/T hybrid, ML-KEM-1024 (category 5) + P-384 | no |
 | MLKEM1024 | `mlkem1024` | pure PQ, ML-KEM-1024 (category 5) | only with `security.tls.enable_mlkem1024` |
-| X25519Kyber768Draft00 | `xyber768d00` | PQ/T hybrid with pre-standard Kyber, obsolete | no |
+| X25519Kyber768Draft00 | `xyber768d00` | PQ/T hybrid with pre-standard Kyber; obsolete, not supported by current Firefox; shown as Not determined | no |
 | x25519 | `x25519` | traditional | yes |
 | secp256r1, secp384r1, secp521r1 | `P256`, `P384`, `P521` | traditional | yes |
 | ffdhe2048, ffdhe3072 | `FF 2048`, `FF 3072` | traditional | only if DHE cipher suites are enabled |
 
-Firefox also reports `none` (no key exchange group, e.g. TLS 1.2 RSA key transport) and `custom` (TLS 1.2 DHE with a prime not from RFC 7919). NIST security categories are from FIPS 203. The hybrid groups are specified in RFC 10024; MLKEM1024 in draft-ietf-tls-mlkem.
+Firefox also reports `custom` (TLS 1.2 DHE with a prime not from RFC 7919). For RSA key transport it reports no group; TLSView recognises it from the cipher suite name. NIST security categories are from FIPS 203. The hybrid groups are specified in RFC 10024; MLKEM1024 in draft-ietf-tls-mlkem.
 
 ## Optional Firefox settings
 
@@ -63,12 +63,13 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 | Row | Content |
 |---|---|
 | Protocol | TLS version |
-| Key exchange | IANA group name, and Firefox's name if different |
-| Key exchange type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
 | Cipher suite | As reported by Firefox, e.g. `TLS_AES_128_GCM_SHA256` |
+| Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
+| Key exchange type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
+| Forward secrecy | Yes for TLS 1.3 and for ECDHE or DHE cipher suites; No for RSA key transport. Shown, not rated. |
 | Signature scheme | TLS signature scheme of the handshake. Shown, not rated. |
 | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit). Shown, not rated. |
-| Encrypted Client Hello | Whether the server accepted ECH. Shown, not rated. |
+| ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used`. Shown, not rated. |
 
 **TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs.
 

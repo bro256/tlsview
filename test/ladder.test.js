@@ -33,7 +33,7 @@ test("stepOf places every kind of setup", () => {
   assert.equal(stepOf(TLS12), "tls12");
   assert.equal(stepOf(TRAD13), "tls13-classical");
   assert.equal(stepOf(HYBRID), "tls13-hybrid");
-  assert.equal(stepOf(KYBER), "tls13-hybrid");
+  assert.equal(stepOf(KYBER), "unknown");
   assert.equal(stepOf(PURE), "tls13-pq");
   assert.equal(stepOf(NO_GROUP), "unknown");
   assert.equal(stepOf({ ...TLS13, keaGroupName: "none" }), "unknown");
@@ -129,7 +129,9 @@ test("an HTTP page never warns", () => {
 test("setup titles", () => {
   const title = (info) => setupTitle(summarize(tab([["main_frame", "https://a.example/", info]])).setups[0]);
   assert.equal(title(HYBRID), "TLS 1.3 · X25519MLKEM768 · PQ/T hybrid");
-  assert.equal(title(KYBER), "TLS 1.3 · X25519Kyber768Draft00 · PQ/T hybrid, obsolete");
+  assert.equal(title(KYBER), "Not determined · TLSv1.3 · X25519Kyber768Draft00 (obsolete)");
+  assert.equal(title({ ...TLS12, keaGroupName: null, cipherSuite: "TLS_RSA_WITH_AES_256_CBC_SHA" }),
+    "TLS 1.2 · RSA key transport");
   assert.equal(title(PURE), "TLS 1.3 · MLKEM1024 · pure post-quantum");
   assert.equal(title(TRAD13), "TLS 1.3 · x25519 · traditional");
   assert.equal(title(TLS12), "TLS 1.2 · secp256r1");

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GROUPS, FIREFOX_SPECIAL } from "../lib/groups.js";
-import { classifyGroup } from "../lib/classify.js";
+import { classifyGroup, isRsaKeyTransport, forwardSecrecy } from "../lib/classify.js";
 
 // Every name getKeaGroupName() in Firefox can return (nsNSSCallbacks.cpp),
 // and the expected mode.
@@ -88,4 +88,24 @@ test("covers exactly the names Firefox reports", () => {
     "unknown group",
   ].sort();
   assert.deepEqual(registryNames, Object.keys(FIREFOX_NAMES).sort());
+});
+
+test("RSA key transport is recognised from the cipher suite, before TLS 1.3 only", () => {
+  const v12 = "TLSv1.2";
+  assert.equal(isRsaKeyTransport({ protocolVersion: v12, cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" }), true);
+  assert.equal(isRsaKeyTransport({ protocolVersion: "TLSv1", cipherSuite: "TLS_RSA_WITH_AES_128_CBC_SHA" }), true);
+  assert.equal(isRsaKeyTransport({ protocolVersion: v12, cipherSuite: "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" }), false);
+  assert.equal(isRsaKeyTransport({ protocolVersion: v12, cipherSuite: "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" }), false);
+  assert.equal(isRsaKeyTransport({ protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" }), false);
+  assert.equal(isRsaKeyTransport({ protocolVersion: v12, cipherSuite: null }), false);
+});
+
+test("forward secrecy", () => {
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.3", keaGroupName: "mlkem768x25519" }), true);
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.3", keaGroupName: null }), null);
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.2", cipherSuite: "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" }), true);
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.2", cipherSuite: "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" }), true);
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" }), false);
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1", cipherSuite: "TLS_RSA_WITH_AES_128_CBC_SHA" }), false);
+  assert.equal(forwardSecrecy({ protocolVersion: "TLSv1.2", cipherSuite: null }), null);
 });

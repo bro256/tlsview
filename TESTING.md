@@ -21,6 +21,7 @@ A changed setting applies to new connections only. After changing one, restart F
 | `1.0` | https://tls-v1-0.badssl.com:1010/ | `enable-deprecated` | TLS 1.0: deprecated |
 | `1.1` | https://tls-v1-1.badssl.com:1011/ | `enable-deprecated` | TLS 1.1: deprecated |
 | `1.2` | https://tls-v1-2.badssl.com:1012/ | – | TLS 1.2: no post-quantum key exchange possible |
+| `1.2` | https://static-rsa.badssl.com/ | – | TLS 1.2: no post-quantum key exchange possible; second line: Key exchange: RSA key transport (no forward secrecy); popup: Forward secrecy: No |
 | `1.3` | any site without post-quantum support | – | TLS 1.3: traditional key exchange only |
 | `PQT` | https://pq.cloudflareresearch.com/ | – | X25519MLKEM768 |
 | `PQT` | https://test.openquantumsafe.org:6006/ | certificate exception | X25519MLKEM768 (same server as the `PQ` test: if this works and 6024 does not, the cause is ML-KEM-1024) |
@@ -38,7 +39,7 @@ These connections are expected to **fail** in Firefox, because Firefox does not 
 | https://test.openquantumsafe.org:6005/ | SecP384r1MLKEM1024 |
 | https://test.openquantumsafe.org:6026/ | MLKEM768 |
 
-## HSTS and Encrypted Client Hello
+## HSTS and ECH
 
 Shown for the page itself, not rated.
 
@@ -46,7 +47,7 @@ Shown for the page itself, not rated.
 |---|---|
 | Open a site that sends `Strict-Transport-Security`, such as https://github.com/ | **HSTS** shows the header as sent. Compare with the response headers of the page in the Network panel (F12). |
 | Open an https page whose response headers (F12 → Network) have no `Strict-Transport-Security` | **HSTS:** `Not used`, or `Known to Firefox; no header in this response` if Firefox already knows the site |
-| Open https://crypto.cloudflare.com/cdn-cgi/trace | **Encrypted Client Hello** agrees with the page: `Used` when it shows `sni=encrypted`, `Not used` when it shows `sni=plaintext` |
+| Open https://crypto.cloudflare.com/cdn-cgi/trace | **ECH** agrees with the page: `Used` when it shows `sni=encrypted`, `Not used` when it shows `sni=plaintext` |
 
 Firefox gets a site's ECH key from its DNS HTTPS record. Without DNS over HTTPS, whether that record can be read depends on the operating system and DNS server; on Windows 10, Firefox does not query it from the system DNS. If ECH is never used, turn on DNS over HTTPS (Settings → Privacy & Security), restart Firefox and retry.
 

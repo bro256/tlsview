@@ -42,7 +42,6 @@ const ready = (async () => {
   }
 })();
 
-
 // Saves a tab's state and sets its icon. Called through the writer below,
 // at most once per WRITE_DELAY_MS per tab. A tab dropped meanwhile is
 // skipped, so a late flush cannot bring its record back.

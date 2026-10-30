@@ -61,7 +61,12 @@ test("tooltip first and second lines", () => {
   assert.equal(page(PQT).title,
     "X25519MLKEM768\nPQ/T hybrid: X25519 + ML-KEM-768, NIST security category 3 (FIPS 203)");
   assert.equal(page(KYBER).title,
-    "X25519Kyber768Draft00\nPQ/T hybrid with pre-standard Kyber768 (obsolete)");
+    "Key exchange not determined\nTLS 1.3, obsolete group: X25519Kyber768Draft00 (not supported by current Firefox)");
+  const RSA12 = { state: "secure", protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" };
+  assert.equal(page(RSA12).title,
+    "TLS 1.2: no post-quantum key exchange possible\nKey exchange: RSA key transport (no forward secrecy)");
+  assert.equal(page({ ...RSA12, protocolVersion: "TLSv1" }).title,
+    "TLS 1.0: deprecated\nNo post-quantum key exchange possible\nKey exchange: RSA key transport (no forward secrecy)");
   assert.equal(page(NO_GROUP).title, "Key exchange not determined\nTLS 1.3, group not reported");
   assert.equal(page({ ...TLS13, keaGroupName: "none" }).title,
     "Key exchange not determined\nTLS 1.3, no key exchange group");
