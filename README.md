@@ -53,6 +53,18 @@ Groups are identified by their [IANA TLS Supported Groups](https://www.iana.org/
 
 Firefox also reports `custom` (TLS 1.2 DHE with a prime not from RFC 7919). For RSA key transport it reports no group; TLSView recognises it from the cipher suite name. NIST security categories are from FIPS 203. The hybrid groups are specified in RFC 10024; MLKEM1024 in draft-ietf-tls-mlkem.
 
+## Names and IANA registries
+
+TLSView names algorithms as the IANA TLS registries do, since those are the identifiers the TLS specifications use. Where Firefox reports a different name, it is shown in brackets, e.g. `X25519MLKEM768 (Firefox: mlkem768x25519)`.
+
+| Item | IANA registry | IANA name | Firefox name |
+|---|---|---|---|
+| Key exchange group | [TLS Supported Groups](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8) | `X25519MLKEM768` | `mlkem768x25519` |
+| Signature scheme | [TLS SignatureScheme](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-signaturescheme) | `ecdsa_secp256r1_sha256` | `ECDSA-P256-SHA256` |
+| Cipher suite | [TLS Cipher Suites](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-4) | `TLS_AES_128_GCM_SHA256` | same |
+
+Two values Firefox can report have no IANA name and are shown as reported: the group `custom` (TLS 1.2 DHE with a prime not from RFC 7919) and the signature `RSA-PKCS1-SHA1MD5` (the TLS 1.0/1.1 signature, which predates the SignatureScheme registry). A value TLSView does not recognise is also shown as reported.
+
 ## Optional Firefox settings
 
 Two `about:config` preferences let Firefox negotiate levels it does not use by default. Both are off by default and apply to the whole browser, so use them for testing and reset them afterwards.
@@ -77,8 +89,9 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 | Key exchange | Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
 | | Type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
 | | Forward secrecy | `Yes` for TLS 1.3 and for ECDHE or DHE cipher suites; `No` for RSA key transport |
-| Authentication | Handshake signature | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2), as Firefox names it, with its kind: `traditional` (RSA, ECDSA) or `post-quantum` (ML-DSA, FIPS 204). Not the certificate's key or its CA signature. |
-| Other | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
+| Authentication | Signature scheme | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2): IANA name, and Firefox's name. Not the certificate's key or its CA signature. |
+| | Type | `Traditional` (RSA, ECDSA) or `Post-quantum` (ML-DSA, FIPS 204) |
+| Extensions and headers | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
 | | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit) |
 
 **TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.

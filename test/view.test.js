@@ -70,9 +70,10 @@ test("page section for a PQ/T hybrid page", () => {
       ["Forward secrecy", "Yes"],
     ] },
     { title: "Authentication", rows: [
-      ["Handshake signature", "ECDSA-P256-SHA256 (traditional)"],
+      ["Signature scheme", "ecdsa_secp256r1_sha256 (Firefox: ECDSA-P256-SHA256)"],
+      ["Type", "Traditional"],
     ] },
-    { title: "Other", rows: [
+    { title: "Extensions and headers", rows: [
       ["ECH", "Not used"],
       ["HSTS", "Known to Firefox; no header in this response"],
     ] },
@@ -128,7 +129,7 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(rows(unknown).map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "AEAD", "Key exchange", "Forward secrecy", "Handshake signature", "ECH", "HSTS"]);
+  assert.deepEqual(rows(unknown).map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "AEAD", "Key exchange", "Forward secrecy", "Signature scheme", "ECH", "HSTS"]);
   assert.deepEqual(rows(unknown)[4], ["Key exchange", "not reported"]);
   assert.deepEqual(rows(unknown)[5], ["Forward secrecy", "not determined"]);
 });
@@ -206,10 +207,21 @@ test("RSA key transport: key exchange row", () => {
   ]);
 });
 
-test("handshake signature row shows the kind", () => {
-  const row = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
-    .page.sections.flatMap((x) => x.rows).find(([t]) => t === "Handshake signature")[1];
-  assert.equal(row({ ...TRAD13, signatureSchemeName: "ML-DSA-65" }), "ML-DSA-65 (post-quantum)");
-  assert.equal(row({ ...TRAD13, signatureSchemeName: "unknown signature" }), "unknown signature");
-  assert.equal(row({ ...TRAD13, signatureSchemeName: undefined }), "not reported");
+test("signature scheme: IANA name, Firefox name and type", () => {
+  const auth = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
+    .page.sections.find((x) => x.title === "Authentication").rows;
+  assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: "ML-DSA-65" }), [
+    ["Signature scheme", "mldsa65 (Firefox: ML-DSA-65)"],
+    ["Type", "Post-quantum: ML-DSA, FIPS 204"],
+  ]);
+  assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: "RSA-PKCS1-SHA1MD5" }), [
+    ["Signature scheme", "RSA-PKCS1-SHA1MD5"],
+    ["Type", "Traditional"],
+  ]);
+  assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: "unknown signature" }), [
+    ["Signature scheme", "unknown signature"],
+  ]);
+  assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: undefined }), [
+    ["Signature scheme", "not reported"],
+  ]);
 });

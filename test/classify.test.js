@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GROUPS, FIREFOX_SPECIAL } from "../lib/groups.js";
-import { classifyGroup, isRsaKeyTransport, forwardSecrecy, recordProtection, signatureKind } from "../lib/classify.js";
+import { classifyGroup, isRsaKeyTransport, forwardSecrecy, recordProtection, signatureKind, signatureIanaName } from "../lib/classify.js";
 
 // Every name getKeaGroupName() in Firefox can return (nsNSSCallbacks.cpp),
 // and the expected mode.
@@ -139,4 +139,18 @@ test("signature scheme kind, by the names Firefox reports", () => {
   for (const n of ["ML-DSA-44", "ML-DSA-65", "ML-DSA-87"]) assert.equal(signatureKind(n), "post-quantum", n);
   assert.equal(signatureKind("unknown signature"), null);
   assert.equal(signatureKind(null), null);
+});
+
+test("signature schemes map to IANA names", () => {
+  const cases = {
+    "ECDSA-P256-SHA256": "ecdsa_secp256r1_sha256", "ECDSA-P384-SHA384": "ecdsa_secp384r1_sha384",
+    "ECDSA-P521-SHA512": "ecdsa_secp521r1_sha512", "RSA-PSS-SHA256": "rsa_pss_rsae_sha256",
+    "RSA-PSS-SHA384": "rsa_pss_rsae_sha384", "RSA-PSS-SHA512": "rsa_pss_rsae_sha512",
+    "RSA-PKCS1-SHA256": "rsa_pkcs1_sha256", "RSA-PKCS1-SHA384": "rsa_pkcs1_sha384",
+    "RSA-PKCS1-SHA512": "rsa_pkcs1_sha512", "ECDSA-SHA1": "ecdsa_sha1", "RSA-PKCS1-SHA1": "rsa_pkcs1_sha1",
+    "ML-DSA-44": "mldsa44", "ML-DSA-65": "mldsa65", "ML-DSA-87": "mldsa87",
+  };
+  for (const [firefox, iana] of Object.entries(cases)) assert.equal(signatureIanaName(firefox), iana, firefox);
+  assert.equal(signatureIanaName("RSA-PKCS1-SHA1MD5"), null);
+  assert.equal(signatureIanaName("unknown signature"), null);
 });
