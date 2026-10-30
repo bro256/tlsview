@@ -56,6 +56,7 @@ test("page section for a PQ/T hybrid page", () => {
   assert.equal(v.status, "ok");
   assert.equal(v.origin, "https://a.example");
   assert.equal(v.page.icon, "icons/step-pqt.svg");
+  assert.equal(v.page.level, "tls13-hybrid");
   assert.equal(v.page.headline, "TLS 1.3 · PQ/T hybrid key exchange");
   assert.deepEqual(v.page.sections, [
     { title: "Connection", rows: [

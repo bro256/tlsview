@@ -61,7 +61,7 @@ function renderDetails(section) {
 function renderPage(page) {
   return el("section", {}, [
     el("h2", {}, [el("span", { text: "This page" })]),
-    el("div", { className: "page-head" }, [
+    el("div", { className: `page-head level-${page.level}` }, [
       el("img", { src: iconSrc(page.icon), alt: "" }),
       el("span", { className: "label", text: page.headline }),
     ]),
