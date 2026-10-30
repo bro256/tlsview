@@ -7,7 +7,6 @@
   --warn-bg: #fef3c7;
   --warn-line: #f59e0b;
   --warn-text: #78350f;
-  --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
   color-scheme: light dark;
 }
 
@@ -49,7 +48,6 @@ header .origin {
   flex: 1;
   min-width: 0;
   text-align: right;
-  font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
   overflow: hidden;
@@ -85,7 +83,6 @@ dl {
 }
 dt { color: var(--muted); }
 dd { margin: 0; overflow-wrap: anywhere; }
-.mono { font-family: var(--mono); font-size: 12px; }
 .nowrap { white-space: nowrap; }
 
 .warnings {
@@ -117,7 +114,7 @@ summary:focus-visible { outline: 2px solid #0060df; outline-offset: -2px; border
 summary img { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; }
 summary .text { flex: 1; min-width: 0; }
 summary .title { font-weight: 600; overflow-wrap: anywhere; }
-summary .cipher { font-family: var(--mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+summary .cipher { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 summary .meta { font-size: 12px; color: var(--muted); }
 summary .chevron { display: inline-block; color: var(--muted); transition: transform 0.15s; }
 details[open] summary .chevron { transform: rotate(90deg); }
@@ -126,11 +123,10 @@ details[open] summary .chevron { transform: rotate(90deg); }
   margin: 0;
   padding: 0 10px 10px 40px;
   list-style: none;
-  font-family: var(--mono);
   font-size: 11px;
 }
 .urls li { overflow-wrap: anywhere; padding: 1px 0; }
-.urls .note { font-family: system-ui, sans-serif; color: var(--muted); padding-top: 4px; }
+.urls .note { color: var(--muted); padding-top: 4px; }
 
 .message { padding: 16px 14px; }
 .message p { margin: 0; }

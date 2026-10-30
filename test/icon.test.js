@@ -53,23 +53,30 @@ test("every icon the code can choose exists", () => {
   for (const p of paths) assert.ok(existsSync(root + p), p);
 });
 
-test("tooltip first and second lines", () => {
+test("tooltip: headline, key exchange, cipher suite", () => {
+  const AES128 = "TLS_AES_128_GCM_SHA256";
   assert.equal(page(INSECURE).title, "No HTTPS: loaded over plain HTTP, without TLS");
-  assert.equal(page(TLS10).title, "TLS 1.0: deprecated\nNo post-quantum key exchange possible");
-  assert.equal(page(TLS11).title, "TLS 1.1: deprecated\nNo post-quantum key exchange possible");
-  assert.equal(page(TLS12).title, "TLS 1.2: no post-quantum key exchange possible\nKey exchange: P256");
-  assert.equal(page(TRAD13).title, "TLS 1.3: traditional key exchange only\nKey exchange: x25519");
-  assert.equal(page(PQ).title,
-    "MLKEM1024\nPure post-quantum: ML-KEM-1024, NIST security category 5 (FIPS 203)");
   assert.equal(page(PQT).title,
-    "X25519MLKEM768\nPQ/T hybrid: X25519 + ML-KEM-768, NIST security category 3 (FIPS 203)");
-  assert.equal(page(KYBER).title,
-    "Key exchange not determined\nTLS 1.3, obsolete group: X25519Kyber768Draft00 (not supported by current Firefox)");
+    `TLS 1.3 · PQ/T hybrid key exchange (quantum-resistant)\nKey exchange: X25519MLKEM768\nCipher suite: ${AES128}`);
+  assert.equal(page(PQ).title,
+    `TLS 1.3 · post-quantum key exchange (quantum-resistant)\nKey exchange: MLKEM1024\nCipher suite: ${AES128}`);
+  assert.equal(page(TRAD13).title,
+    `TLS 1.3 · traditional key exchange (not quantum-resistant)\nKey exchange: x25519\nCipher suite: ${AES128}`);
+  const ECDHE12 = { ...TLS12, cipherSuite: "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" };
+  assert.equal(page(ECDHE12).title,
+    "TLS 1.2 · traditional key exchange (not quantum-resistant)\nKey exchange: secp256r1\nCipher suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256");
   const RSA12 = { state: "secure", protocolVersion: "TLSv1.2", cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256" };
   assert.equal(page(RSA12).title,
-    "TLS 1.2: no post-quantum key exchange possible\nKey exchange: RSA key transport (no forward secrecy)");
-  assert.equal(page({ ...RSA12, protocolVersion: "TLSv1" }).title,
-    "TLS 1.0: deprecated\nNo post-quantum key exchange possible\nKey exchange: RSA key transport (no forward secrecy)");
+    "TLS 1.2 · traditional key exchange (not quantum-resistant)\nKey exchange: RSA key transport (no forward secrecy)\n" +
+    "Cipher suite: TLS_RSA_WITH_AES_128_GCM_SHA256");
+  assert.equal(page({ ...RSA12, protocolVersion: "TLSv1", cipherSuite: "TLS_RSA_WITH_AES_128_CBC_SHA" }).title,
+    "TLS 1.0 · deprecated protocol\nKey exchange: RSA key transport (no forward secrecy)\nCipher suite: TLS_RSA_WITH_AES_128_CBC_SHA");
+  assert.equal(page(TLS11).title, "TLS 1.1 · deprecated protocol\nKey exchange: not reported\nCipher suite: not reported");
+  assert.equal(page({ ...TLS12, keaGroupName: "custom", cipherSuite: "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" }).title,
+    "TLS 1.2 · traditional key exchange (not quantum-resistant)\nKey exchange: Finite field DH with a custom prime\n" +
+    "Cipher suite: TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
+  assert.equal(page(KYBER).title,
+    "Key exchange not determined\nTLS 1.3, obsolete group: X25519Kyber768Draft00 (not supported by current Firefox)");
   assert.equal(page(NO_GROUP).title, "Key exchange not determined\nTLS 1.3, group not reported");
   assert.equal(page({ ...TLS13, keaGroupName: "none" }).title,
     "Key exchange not determined\nTLS 1.3, no key exchange group");
@@ -109,7 +116,7 @@ test("both warning lines when both rules apply", () => {
     ["script", "https://b.example/x.js", TLS12],
     ["image", "https://c.example/i.png", NO_GROUP],
   ]);
-  assert.deepEqual(i.title.split("\n").slice(2), [
+  assert.deepEqual(i.title.split("\n").slice(3), [
     "Warning: some responses in this tab have a lower protection level than the page",
     "Warning: some responses in this tab could not be checked",
   ]);

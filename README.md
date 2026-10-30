@@ -28,7 +28,13 @@ A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ
 - **Lower protection level:** at least one response in the tab is on a lower level than the page.
 - **Could not be checked:** at least one response is *Not determined*. Not shown when the page itself is *Not determined* or has no HTTPS.
 
-The tooltip names the group, e.g. `X25519MLKEM768` and `PQ/T hybrid: X25519 + ML-KEM-768, NIST security category 3 (FIPS 203)`.
+The tooltip shows the popup's headline, then the key exchange and the cipher suite, then any warnings:
+
+```
+TLS 1.3 · PQ/T hybrid key exchange (quantum-resistant)
+Key exchange: X25519MLKEM768
+Cipher suite: TLS_AES_128_GCM_SHA256
+```
 
 ## Key exchange groups
 

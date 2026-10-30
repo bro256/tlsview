@@ -51,8 +51,7 @@ function keepNamesTogether(text) {
 function renderPage(page) {
   const rows = [];
   for (const [term, value] of page.rows) {
-    const mono = term === "Key exchange" || term === "Cipher suite" || term === "Signature scheme";
-    rows.push(el("dt", { text: term }), el("dd", { className: mono ? "mono" : "" }, keepNamesTogether(value)));
+    rows.push(el("dt", { text: term }), el("dd", {}, keepNamesTogether(value)));
   }
   return el("section", {}, [
     el("h2", {}, [el("span", { text: "This page" })]),
