@@ -7,5 +7,6 @@ export default {
     "web-ext-config.mjs",
     "test",
     "TESTING.md",
+    "docs",
   ],
 };

@@ -2,6 +2,10 @@
 
 Firefox extension that shows which TLS version and key exchange a site uses: traditional, hybrid post-quantum or pure post-quantum (ML-KEM).
 
+<p align="center">
+  <img src="docs/screenshot.png" width="800" alt="TLSView popup on www.firefox.com: TLS 1.3 · hybrid post-quantum key exchange, X25519MLKEM768">
+</p>
+
 Only the key exchange is rated. Post-quantum key exchange is designed to protect the confidentiality of recorded traffic against a future quantum computer ("harvest now, decrypt later"). It does not protect authentication: signatures and certificates are not rated.
 
 Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ) and *PQ/T hybrid* (a post-quantum and a traditional algorithm combined). TLSView calls a PQ/T hybrid key exchange *hybrid post-quantum*; both names mean the same.
