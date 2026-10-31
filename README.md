@@ -4,29 +4,41 @@ Firefox extension that shows which TLS version and key exchange a site uses: tra
 
 Only the key exchange is rated. Post-quantum key exchange is designed to protect the confidentiality of recorded traffic against a future quantum computer ("harvest now, decrypt later"). It does not protect authentication: signatures and certificates are not rated.
 
-Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ), *PQ/T hybrid* (a PQ and a traditional algorithm combined). Levels and headlines say *hybrid post-quantum* for a PQ/T hybrid; the popup's Type row uses the RFC term.
+Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ) and *PQ/T hybrid* (a post-quantum and a traditional algorithm combined). TLSView calls a PQ/T hybrid key exchange *hybrid post-quantum*; both names mean the same.
+
+## Install
+
+Requires Firefox 140 or later (desktop).
+
+1. Download this repository (**Code → Download ZIP**) and unzip it, or clone it with git.
+2. In Firefox, open `about:debugging#/runtime/this-firefox`.
+3. Click **Load Temporary Add-on…** and select `manifest.json` in the unzipped folder.
+4. Optional: pin the icon (puzzle-piece button → TLSView → **Pin to Toolbar**).
+5. Click the icon. If asked, allow access to all sites: TLSView needs it to read the TLS details of each site.
+
+A temporary add-on is removed when Firefox closes; load it again after a restart.
 
 ## Protection levels
 
-The toolbar icon shows the level of the connection that delivered the page itself (the main document). Higher is better. Both post-quantum levels show `PQ`: green for hybrid post-quantum, lavender for pure post-quantum.
+The toolbar icon shows the level of the connection that delivered the page itself (the main document). Both post-quantum levels show `PQ`: green for hybrid post-quantum, lavender for pure post-quantum.
 
 | Icon | Level | Meaning |
 |:-:|---|---|
 | <img src="icons/step-pqt.svg" width="24" alt="PQ, green"> | TLS 1.3 · hybrid post-quantum | ML-KEM combined with ECDH (a PQ/T hybrid). Designed to remain secure if either component remains secure. |
-| <img src="icons/step-pq.svg" width="24" alt="PQ, lavender"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below hybrid post-quantum: with no traditional component, its security rests on ML-KEM alone. |
+| <img src="icons/step-pq.svg" width="24" alt="PQ, lavender"> | TLS 1.3 · pure post-quantum | ML-KEM alone, without a traditional component. |
 | <img src="icons/step-tls13.svg" width="24" alt="1.3"> | TLS 1.3 · traditional | ECDH or finite field DH only. Not post-quantum. |
-| <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not post-quantum: Firefox offers ML-KEM groups only in TLS 1.3. RSA key transport (`TLS_RSA_WITH_*` cipher suites, enabled in Firefox by default) has no forward secrecy. |
+| <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not post-quantum: the ML-KEM groups are specified for TLS 1.3 only. RSA key transport (`TLS_RSA_WITH_*` cipher suites) has no forward secrecy; TLS 1.3 removed it. |
 | <img src="icons/step-tls11.svg" width="24" alt="1.1"> | TLS 1.1 | Deprecated (RFC 8996). |
 | <img src="icons/step-tls10.svg" width="24" alt="1.0"> | TLS 1.0 | Deprecated (RFC 8996). |
 | <img src="icons/step-insecure.svg" width="24" alt="✕"> | No HTTPS | Loaded over plain HTTP, without TLS. |
 | <img src="icons/step-unknown.svg" width="24" alt="?"> | Not determined | TLS version or key exchange group not reported, not recognised, or obsolete; or an https response that Firefox reported without TLS details. Not ranked. |
 
-The order is TLSView's. Some guidance prefers pure ML-KEM: CNSA 2.0 requires ML-KEM-1024 for key establishment.
-
 A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ with warning">) means other responses in the tab need attention:
 
 - **Lower level:** at least one response in the tab is on a lower level than the page. The warning names those levels, e.g. `TLS 1.2, TLS 1.3 · traditional`.
 - **Could not be checked:** at least one response is *Not determined*. Not shown when the page itself is *Not determined* or has no HTTPS.
+
+For the warning, levels are compared in the order of the table above: a response on a level further down the table than the page counts as lower. TLS 1.1 and TLS 1.0 count as one level; *Not determined* is not compared.
 
 The tooltip shows the popup's headline, then the key exchange and the cipher suite, then any warnings:
 
@@ -51,7 +63,7 @@ Groups are identified by their [IANA TLS Supported Groups](https://www.iana.org/
 | secp256r1, secp384r1, secp521r1 | `P256`, `P384`, `P521` | traditional | yes |
 | ffdhe2048, ffdhe3072 | `FF 2048`, `FF 3072` | traditional | only if DHE cipher suites are enabled |
 
-Firefox also reports `custom` (TLS 1.2 DHE with a prime not from RFC 7919). For RSA key transport it reports no group; TLSView recognises it from the cipher suite name. NIST security categories are from FIPS 203. The hybrid groups are specified in RFC 10024; MLKEM1024 in draft-ietf-tls-mlkem.
+Firefox also reports `custom` (TLS 1.2 DHE with a prime not from RFC 7919). For RSA key transport it reports no group; TLSView recognises it from the cipher suite name. NIST security categories are from FIPS 203. The hybrid groups are specified in [RFC 10024](https://www.rfc-editor.org/rfc/rfc10024); MLKEM1024 in [draft-ietf-tls-mlkem](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/).
 
 ## Names and IANA registries
 
@@ -76,6 +88,8 @@ Two `about:config` preferences let Firefox negotiate levels it does not use by d
 
 A change applies to new connections only. Restart Firefox, then reload the page without the cache (Ctrl+F5).
 
+TLS 1.0 is the lowest version Firefox can use. SSL 2.0 and SSL 3.0 cannot be enabled: Firefox ignores any minimum version setting below TLS 1.0.
+
 ## Popup
 
 **This page** shows the page's own connection, in four sections. Only the key exchange is rated; everything else is shown, not rated.
@@ -88,7 +102,7 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 | | AEAD | `Yes` for GCM, CCM and ChaCha20-Poly1305; `No` for CBC. Firefox does not support encrypt-then-MAC (RFC 7366), so CBC suites use MAC-then-encrypt. |
 | Key exchange | Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
 | | Type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
-| | Forward secrecy | `Yes` for TLS 1.3 and for ECDHE or DHE cipher suites; `No` for RSA key transport |
+| | Forward secrecy | `Yes` for an ephemeral key exchange: every TLS 1.3 handshake, and ECDHE or DHE cipher suites in earlier versions. `No` for RSA key transport. |
 | Authentication | Signature scheme | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2): IANA name, and Firefox's name. Not the certificate's key or its CA signature. |
 | | Type | `Traditional` (RSA, ECDSA) or `Post-quantum` (ML-DSA, FIPS 204) |
 | Extensions and headers | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
@@ -96,14 +110,9 @@ A change applies to new connections only. Restart Firefox, then reload the page 
 
 **TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
 
-## Install from source
+## Development
 
-Requires Firefox 140 or later (desktop).
-
-1. Open `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on…** and select `manifest.json`.
-
-Development tooling ([web-ext](https://github.com/mozilla/web-ext), Node.js 22 or later):
+Needs [Node.js](https://nodejs.org/) 22 or later. The tools ([web-ext](https://github.com/mozilla/web-ext)) are for development only and are not part of the extension.
 
 ```sh
 npm install
@@ -142,5 +151,8 @@ TLSView collects and transmits no data. Each tab's record is kept in `storage.se
 | FFDHE groups | [RFC 7919](https://www.rfc-editor.org/rfc/rfc7919) |
 | HSTS | [RFC 6797](https://www.rfc-editor.org/rfc/rfc6797) |
 | ECH | [RFC 9849](https://www.rfc-editor.org/rfc/rfc9849) |
-| CNSA 2.0 | [NSA CNSA 2.0 FAQ](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSI_CNSA_2.0_FAQ_.PDF) |
 | Extension API | [webRequest.getSecurityInfo()](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/webRequest/getSecurityInfo) |
+
+## License
+
+BSD 3-Clause. See [LICENSE](LICENSE).
