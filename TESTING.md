@@ -23,8 +23,8 @@ A changed setting applies to new connections only. After changing one, restart F
 | `1.2` | https://tls-v1-2.badssl.com:1012/ | – | TLS 1.2 · traditional key exchange (not post-quantum) |
 | `1.2` | https://static-rsa.badssl.com/ | – | TLS 1.2 · traditional key exchange (not post-quantum); second line: Key exchange: RSA key transport (no forward secrecy); popup: Forward secrecy: No |
 | `1.3` | any site without post-quantum support | – | TLS 1.3 · traditional key exchange (not post-quantum) |
-| `PQ` green | https://pq.cloudflareresearch.com/ | – | TLS 1.3 · PQ/T hybrid key exchange; X25519MLKEM768 |
-| `PQ` green | https://test.openquantumsafe.org:6006/ | certificate exception | TLS 1.3 · PQ/T hybrid key exchange; X25519MLKEM768 (same server as the lavender `PQ` test: if this works and 6024 does not, the cause is ML-KEM-1024) |
+| `PQ` green | https://pq.cloudflareresearch.com/ | – | TLS 1.3 · hybrid post-quantum key exchange; X25519MLKEM768 |
+| `PQ` green | https://test.openquantumsafe.org:6006/ | certificate exception | TLS 1.3 · hybrid post-quantum key exchange; X25519MLKEM768 (same server as the lavender `PQ` test: if this works and 6024 does not, the cause is ML-KEM-1024) |
 | `PQ` lavender | https://test.openquantumsafe.org:6024/ | certificate exception, `enable_mlkem1024` | TLS 1.3 · pure post-quantum key exchange; MLKEM1024 |
 | `1.3` or `PQ` green | https://test.openquantumsafe.org:6002/ | certificate exception | depends on the server's group order |
 

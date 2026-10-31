@@ -51,13 +51,13 @@ test("page not seen: no record, no main frame, or a record of another origin", (
   assert.equal(v.hint, "Reload the page to check it.");
 });
 
-test("page section for a PQ/T hybrid page", () => {
+test("page section for a hybrid post-quantum page", () => {
   const v = buildView(tab([["main_frame", "https://a.example/", PQT]]), "https://a.example/page?x=1");
   assert.equal(v.status, "ok");
   assert.equal(v.origin, "https://a.example");
   assert.equal(v.page.icon, "icons/step-pqt.svg");
   assert.equal(v.page.level, "tls13-hybrid");
-  assert.equal(v.page.headline, "TLS 1.3 · PQ/T hybrid key exchange");
+  assert.equal(v.page.headline, "TLS 1.3 · hybrid post-quantum key exchange");
   assert.deepEqual(v.page.sections, [
     { title: "Connection", rows: [
       ["Protocol", "TLS 1.3"],
@@ -142,7 +142,7 @@ test("setups are listed lowest first with counts and URLs", () => {
     ["script", "https://tracker.example/t.js", TLS12],
   ]), "https://a.example/");
   assert.equal(v.responses, 3);
-  assert.deepEqual(v.setups.map((s) => s.title), ["TLS 1.2 · secp256r1", "TLS 1.3 · X25519MLKEM768 · PQ/T hybrid"]);
+  assert.deepEqual(v.setups.map((s) => s.title), ["TLS 1.2 · secp256r1", "TLS 1.3 · X25519MLKEM768 · hybrid post-quantum"]);
   const pqt = v.setups[1];
   assert.equal(pqt.icon, "icons/step-pqt.svg");
   assert.equal(pqt.cipherSuite, "TLS_AES_128_GCM_SHA256");

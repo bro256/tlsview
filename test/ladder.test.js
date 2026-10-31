@@ -50,7 +50,7 @@ test("TLS 1.2 and earlier are placed by version, whatever the group", () => {
   assert.equal(stepOf({ ...TLS12, keaGroupName: "mlkem768x25519" }), "tls12");
 });
 
-test("ranks: PQ/T hybrid above pure post-quantum, unknown unranked", () => {
+test("ranks: hybrid post-quantum above pure post-quantum, unknown unranked", () => {
   assert.deepEqual(
     ["insecure", "tls-legacy", "tls12", "tls13-classical", "tls13-pq", "tls13-hybrid"].map(rankOf),
     [0, 1, 2, 3, 4, 5],
@@ -101,7 +101,7 @@ test("lower step: one response is enough", () => {
   assert.equal(s.lowest, "tls12");
 });
 
-test("pure post-quantum on a PQ/T hybrid page is a lower step", () => {
+test("pure post-quantum on a hybrid post-quantum page is a lower step", () => {
   const s = pageWith(HYBRID, PURE);
   assert.equal(s.lowerStep, true);
   assert.equal(s.warning, true);
@@ -131,7 +131,7 @@ test("an HTTP page never warns", () => {
 
 test("setup titles", () => {
   const title = (info) => setupTitle(summarize(tab([["main_frame", "https://a.example/", info]])).setups[0]);
-  assert.equal(title(HYBRID), "TLS 1.3 · X25519MLKEM768 · PQ/T hybrid");
+  assert.equal(title(HYBRID), "TLS 1.3 · X25519MLKEM768 · hybrid post-quantum");
   assert.equal(title(KYBER), "Not determined · TLSv1.3 · X25519Kyber768Draft00 (obsolete)");
   assert.equal(title({ ...TLS12, keaGroupName: null, cipherSuite: "TLS_RSA_WITH_AES_256_CBC_SHA" }),
     "TLS 1.2 · RSA key transport");

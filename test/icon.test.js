@@ -57,7 +57,7 @@ test("tooltip: headline, key exchange, cipher suite", () => {
   const AES128 = "TLS_AES_128_GCM_SHA256";
   assert.equal(page(INSECURE).title, "No HTTPS: loaded over plain HTTP, without TLS");
   assert.equal(page(PQT).title,
-    `TLS 1.3 · PQ/T hybrid key exchange\nKey exchange: X25519MLKEM768\nCipher suite: ${AES128}`);
+    `TLS 1.3 · hybrid post-quantum key exchange\nKey exchange: X25519MLKEM768\nCipher suite: ${AES128}`);
   assert.equal(page(PQ).title,
     `TLS 1.3 · pure post-quantum key exchange\nKey exchange: MLKEM1024\nCipher suite: ${AES128}`);
   assert.equal(page(TRAD13).title,
@@ -90,7 +90,7 @@ test("lower step: warning icon and line", () => {
   assert.match(i.title, /\nWarning: some responses in this tab used a lower level than the page: TLS 1\.2$/);
 });
 
-test("pure post-quantum is lower than PQ/T hybrid", () => {
+test("pure post-quantum is lower than hybrid post-quantum", () => {
   assert.equal(withOther(PQT, PQ).path, "icons/step-pqt-warn.svg");
   assert.equal(withOther(PQ, PQT).path, "icons/step-pq.svg");
 });

@@ -1,19 +1,19 @@
 # TLSView
 
-Firefox extension that shows which TLS version and key exchange a site uses: traditional, PQ/T hybrid or pure post-quantum (ML-KEM).
+Firefox extension that shows which TLS version and key exchange a site uses: traditional, hybrid post-quantum or pure post-quantum (ML-KEM).
 
 Only the key exchange is rated. Post-quantum key exchange is designed to protect the confidentiality of recorded traffic against a future quantum computer ("harvest now, decrypt later"). It does not protect authentication: signatures and certificates are not rated.
 
-Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ), *PQ/T hybrid* (a PQ and a traditional algorithm combined).
+Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ), *PQ/T hybrid* (a PQ and a traditional algorithm combined). Levels and headlines say *hybrid post-quantum* for a PQ/T hybrid; the popup's Type row uses the RFC term.
 
 ## Protection levels
 
-The toolbar icon shows the level of the connection that delivered the page itself (the main document). Higher is better. Both post-quantum levels show `PQ`: green for PQ/T hybrid, lavender for pure post-quantum.
+The toolbar icon shows the level of the connection that delivered the page itself (the main document). Higher is better. Both post-quantum levels show `PQ`: green for hybrid post-quantum, lavender for pure post-quantum.
 
 | Icon | Level | Meaning |
 |:-:|---|---|
-| <img src="icons/step-pqt.svg" width="24" alt="PQ, green"> | TLS 1.3 · PQ/T hybrid | ML-KEM combined with ECDH. Designed to remain secure if either component remains secure. |
-| <img src="icons/step-pq.svg" width="24" alt="PQ, lavender"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below PQ/T hybrid: with no traditional component, its security rests on ML-KEM alone. |
+| <img src="icons/step-pqt.svg" width="24" alt="PQ, green"> | TLS 1.3 · hybrid post-quantum | ML-KEM combined with ECDH (a PQ/T hybrid). Designed to remain secure if either component remains secure. |
+| <img src="icons/step-pq.svg" width="24" alt="PQ, lavender"> | TLS 1.3 · pure post-quantum | ML-KEM alone. Ranked below hybrid post-quantum: with no traditional component, its security rests on ML-KEM alone. |
 | <img src="icons/step-tls13.svg" width="24" alt="1.3"> | TLS 1.3 · traditional | ECDH or finite field DH only. Not post-quantum. |
 | <img src="icons/step-tls12.svg" width="24" alt="1.2"> | TLS 1.2 | Not post-quantum: Firefox offers ML-KEM groups only in TLS 1.3. RSA key transport (`TLS_RSA_WITH_*` cipher suites, enabled in Firefox by default) has no forward secrecy. |
 | <img src="icons/step-tls11.svg" width="24" alt="1.1"> | TLS 1.1 | Deprecated (RFC 8996). |
@@ -31,7 +31,7 @@ A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ
 The tooltip shows the popup's headline, then the key exchange and the cipher suite, then any warnings:
 
 ```
-TLS 1.3 · PQ/T hybrid key exchange
+TLS 1.3 · hybrid post-quantum key exchange
 Key exchange: X25519MLKEM768
 Cipher suite: TLS_AES_128_GCM_SHA256
 ```
