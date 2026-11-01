@@ -89,6 +89,6 @@ Report the result of each check, including when a group is `not reported`, so RE
 - **Warning:** on a page whose resources come from servers with different setups, the icon shows the corner mark when any setup is on a lower level, and the popup and tooltip name the lower levels.
 - **Live update:** open the popup while a large page is loading; setups and counts update.
 - **Navigation:** open a large page and immediately click a link to another site; the new page's popup does not list the first site's servers.
-- **Origins only:** expand a setup; it lists origins (scheme, host, and the port if not the default), each with a response count, most first. No paths appear. The counts add up to the setup's responses.
+- **Origins only:** expand a setup; it lists origins (host and port; the scheme only if not https), each with a response count, most first. No paths appear. The counts add up to the setup's responses.
 - **Counts line:** the setups header and each setup show `N origins · N responses`, plus `(N from cache)` when any came from cache. The header's numbers are the totals for the tab; an origin used by two setups counts once.
 - **Tab closed:** the tab's record is deleted (check `storage.session` in `about:debugging` → Inspect → Storage).
