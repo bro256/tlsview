@@ -1,4 +1,4 @@
-import { newTabState, recordResponse, originOf, isFromCurrentPage } from "./lib/tabstate.js";
+import { newTabState, recordResponse, originOf, isFromCurrentPage, FORMAT } from "./lib/tabstate.js";
 import { summarize } from "./lib/ladder.js";
 import { iconFor, NOT_INSPECTABLE, RESTRICTED } from "./lib/icon.js";
 import { isRestrictedUrl } from "./lib/restricted.js";
@@ -32,8 +32,9 @@ const ready = (async () => {
     for (const [key, state] of Object.entries(saved)) {
       if (!key.startsWith(STORAGE_PREFIX)) continue;
       const tabId = Number(key.slice(STORAGE_PREFIX.length));
-      // Records in an older shape (no setups) are dropped, not reused.
-      if (openTabs.has(tabId) && state?.setups) tabStates.set(tabId, state);
+      // Records in another format (e.g. from an earlier version) are
+      // dropped, not reused.
+      if (openTabs.has(tabId) && state?.format === FORMAT) tabStates.set(tabId, state);
       else stale.push(key);
     }
     if (stale.length) await browser.storage.session.remove(stale);

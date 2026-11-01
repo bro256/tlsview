@@ -87,14 +87,22 @@ function renderWarnings(warnings) {
   return el("div", { className: "warnings", role: "status" }, warnings.map(renderWarning));
 }
 
-function renderSetup(setup) {
-  let meta = `${plural(setup.count, "response")} · ` +
-    `${plural(setup.origins, "origin")}${setup.originsTruncated ? "+" : ""}`;
-  if (setup.fromCache) meta += ` · ${setup.fromCache} from cache`;
+// "7 origins · 56 responses (28 from cache)"
+function countsLine(origins, more, responses, fromCache) {
+  let line = `${plural(origins, "origin")}${more ? "+" : ""} · ${plural(responses, "response")}`;
+  if (fromCache) line += ` (${fromCache} from cache)`;
+  return line;
+}
 
-  const urls = setup.urls.map((u) => el("li", { text: u }));
-  if (setup.urlsTruncated) {
-    urls.push(el("li", { className: "note", text: `List limited to the first ${setup.urls.length} URLs.` }));
+function renderSetup(setup) {
+  const meta = countsLine(setup.origins.length, setup.unlisted > 0, setup.count, setup.fromCache);
+
+  const items = setup.origins.map((o) => el("li", {}, [
+    el("span", { className: "name", text: o.name }),
+    el("span", { className: "n", text: String(o.count) }),
+  ]));
+  if (setup.unlisted) {
+    items.push(el("li", { className: "note", text: `${plural(setup.unlisted, "response")} from further origins not listed.` }));
   }
 
   const details = el("details", {}, [
@@ -107,7 +115,7 @@ function renderSetup(setup) {
       ]),
       el("span", { className: "chevron", "aria-hidden": "true", text: "›" }),
     ]),
-    el("ul", { className: "urls" }, urls),
+    el("ul", { className: "origins" }, items),
   ]);
   if (expanded.has(setup.title)) details.open = true;
   details.addEventListener("toggle", () => {
@@ -129,7 +137,7 @@ function renderView(view) {
     el("section", {}, [
       el("h2", {}, [
         el("span", { text: "TLS setups in this tab" }),
-        el("span", { className: "count", text: plural(view.responses, "response") }),
+        el("span", { className: "count", text: countsLine(view.origins, view.originsMore, view.responses, view.fromCache) }),
       ]),
       el("ul", { className: "setups" }, view.setups.map(renderSetup)),
     ]),

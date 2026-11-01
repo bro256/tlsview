@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
   MAX_ITEMS,
   originOf,
-  urlWithoutQuery,
   newTabState,
   setupOf,
   setupKey,
@@ -37,12 +36,6 @@ test("originOf keeps scheme, host and port only", () => {
   assert.equal(originOf("data:text/plain,hi"), null);
 });
 
-test("urlWithoutQuery drops query string and fragment", () => {
-  assert.equal(urlWithoutQuery("https://example.com/a/b?token=abc#x"), "https://example.com/a/b");
-  assert.equal(urlWithoutQuery("https://example.com"), "https://example.com/");
-  assert.equal(urlWithoutQuery("not a url"), null);
-});
-
 test("records the main frame with its signature", () => {
   const s = newTabState();
   recordResponse(s, r("main_frame", "https://example.com/page?x=1"), HYBRID);
@@ -62,7 +55,7 @@ test("groups responses by TLS version, key exchange group and cipher suite", () 
   assert.equal(Object.keys(s.setups).length, 3);
   const hybrid = s.setups[setupKey(setupOf(HYBRID))];
   assert.equal(hybrid.count, 2);
-  assert.deepEqual(hybrid.origins, ["https://a.example", "https://b.example"]);
+  assert.deepEqual(hybrid.origins, { "https://a.example": 1, "https://b.example": 1 });
 });
 
 test("the signature scheme does not split a setup", () => {
@@ -77,7 +70,7 @@ test("counts responses and cached responses", () => {
   for (const cached of [false, true, true]) recordResponse(s, r("image", "https://a.example/x.png", cached), HYBRID);
   assert.equal(only(s).count, 3);
   assert.equal(only(s).fromCache, 2);
-  assert.deepEqual(only(s).urls, ["https://a.example/x.png"]);
+  assert.deepEqual(only(s).origins, { "https://a.example": 3 });
 });
 
 test("records plain HTTP with nulls for missing TLS fields", () => {
@@ -89,13 +82,23 @@ test("records plain HTTP with nulls for missing TLS fields", () => {
   assert.deepEqual(only(s).signatures, {});
 });
 
-test("caps stored URLs and marks the list as truncated", () => {
+test("stores origins only, with a response count, never paths or queries", () => {
   const s = newTabState();
-  for (let i = 0; i < MAX_ITEMS + 5; i++) recordResponse(s, r("image", `https://a.example/${i}.png`), HYBRID);
-  assert.equal(only(s).urls.length, MAX_ITEMS);
-  assert.equal(only(s).urlsTruncated, true);
-  assert.equal(only(s).count, MAX_ITEMS + 5);
-  assert.equal(only(s).originsTruncated, false);
+  recordResponse(s, r("script", "https://a.example/secret/path.js?token=x"), HYBRID);
+  recordResponse(s, r("image", "https://a.example/other.png"), HYBRID);
+  assert.deepEqual(only(s).origins, { "https://a.example": 2 });
+  assert.ok(!JSON.stringify(s).includes("secret"));
+  assert.ok(!JSON.stringify(s).includes("token"));
+});
+
+test("caps listed origins and counts the rest as unlisted", () => {
+  const s = newTabState();
+  for (let i = 0; i < MAX_ITEMS + 5; i++) recordResponse(s, r("image", `https://h${i}.example/x.png`), HYBRID);
+  recordResponse(s, r("image", "https://h0.example/y.png"), HYBRID); // listed origin still counts
+  assert.equal(Object.keys(only(s).origins).length, MAX_ITEMS);
+  assert.equal(only(s).unlisted, 5);
+  assert.equal(only(s).origins["https://h0.example"], 2);
+  assert.equal(only(s).count, MAX_ITEMS + 6);
 });
 
 test("ignores responses whose URL has no origin", () => {
@@ -150,3 +153,4 @@ test("isFromCurrentPage accepts everything before the page is known", () => {
   assert.equal(isFromCurrentPage(newTabState(),
     { type: "image", url: "https://x.example/i.png", documentUrl: "https://y.example/" }), true);
 });
+

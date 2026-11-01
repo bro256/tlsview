@@ -161,14 +161,16 @@ summary .meta { font-size: 11px; color: var(--muted); font-variant-numeric: tabu
 summary .chevron { display: inline-block; color: var(--muted); transition: transform 0.15s; }
 details[open] summary .chevron { transform: rotate(90deg); }
 
-.urls {
+.origins {
   margin: 0;
   padding: 0 10px 10px 40px;
   list-style: none;
   font-size: 11px;
 }
-.urls li { overflow-wrap: anywhere; padding: 1px 0; }
-.urls .note { color: var(--muted); padding-top: 4px; }
+.origins li { display: flex; gap: 10px; padding: 1px 0; }
+.origins .name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.origins .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.origins .note { color: var(--muted); padding-top: 4px; }
 
 .message { padding: 16px 14px; }
 .message p { margin: 0; }

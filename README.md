@@ -114,7 +114,7 @@ TLS 1.0 is the lowest version Firefox can use. SSL 2.0 and SSL 3.0 cannot be ena
 | Extensions and headers | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
 | | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit) |
 
-**TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its responses, distinct origins, responses served from cache, and, when expanded, the URLs. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
+**TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its origins and responses, e.g. `2 origins · 38 responses (12 from cache)`, and, when expanded, each origin (scheme, host and port, e.g. `https://example.com`) with its number of responses. Individual responses are not listed, only origins: TLS is negotiated per origin, and full URLs can contain personal data or secrets, such as session tokens, so they are never stored. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
 
 ## Development
 
@@ -139,7 +139,7 @@ npm run build    # packages the extension into web-ext-artifacts/
 
 ## Privacy
 
-TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. URLs are stored without query string or fragment. A record is deleted when its tab closes, and all records when Firefox closes.
+TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. Only origins are stored, with a response count: no paths, query strings or fragments, so the popup stays safe to share, for example in a screenshot. A record is deleted when its tab closes, and all records when Firefox closes.
 
 ## References
 

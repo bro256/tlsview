@@ -135,22 +135,24 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
   assert.deepEqual(rows(unknown)[5], ["Forward secrecy", "not determined"]);
 });
 
-test("setups are listed lowest first with counts and URLs", () => {
+test("setups are listed lowest first with counts and origins", () => {
   const v = buildView(tab([
     ["main_frame", "https://a.example/", PQT],
     ["image", "https://a.example/i.png?v=2", PQT, true],
     ["script", "https://tracker.example/t.js", TLS12],
   ]), "https://a.example/");
   assert.equal(v.responses, 3);
+  assert.equal(v.fromCache, 1);
   assert.deepEqual(v.setups.map((s) => s.title), ["TLS 1.2 · secp256r1", "TLS 1.3 · X25519MLKEM768 · hybrid post-quantum"]);
   const pqt = v.setups[1];
   assert.equal(pqt.icon, "icons/step-pqt.svg");
   assert.equal(pqt.cipherSuite, "TLS_AES_128_GCM_SHA256");
   assert.equal(pqt.count, 2);
   assert.equal(pqt.fromCache, 1);
-  assert.equal(pqt.origins, 1);
-  assert.deepEqual(pqt.urls, ["https://a.example/", "https://a.example/i.png"]);
-  assert.equal(pqt.urlsTruncated, false);
+  assert.deepEqual(pqt.origins, [{ name: "https://a.example", count: 2 }]);
+  assert.equal(pqt.unlisted, 0);
+  assert.equal(v.origins, 2);
+  assert.equal(v.originsMore, false);
 });
 
 test("warnings without the 'Warning:' prefix", () => {
@@ -225,4 +227,13 @@ test("signature scheme: IANA name, Firefox name and type", () => {
   assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: undefined }), [
     ["Signature scheme", "not reported"],
   ]);
+});
+
+test("origins are listed most responses first", () => {
+  const v = buildView(tab([
+    ["main_frame", "https://a.example/", PQT],
+    ["script", "https://b.example/1.js", PQT],
+    ["script", "https://b.example/2.js", PQT],
+  ]), "https://a.example/");
+  assert.deepEqual(v.setups[0].origins, [{ name: "https://b.example", count: 2 }, { name: "https://a.example", count: 1 }]);
 });
