@@ -13,7 +13,7 @@ Third-party test servers can change their configuration at any time. A different
 
 A changed setting applies to new connections only. After changing one, restart Firefox, then load the test page with **Ctrl+F5** so it is not served from the cache. Reset all settings to their defaults after testing.
 
-## Protection levels
+## Levels
 
 | Expected icon | URL | Requires | Tooltip (first line; Key exchange on the second) |
 |---|---|---|---|
