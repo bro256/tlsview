@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { newTabState, recordResponse } from "../lib/tabstate.js";
-import { buildView, protocolLabel, referenceLabel, plural, originLabel } from "../lib/view.js";
+import { buildView, protocolLabel, referenceLabel, plural } from "../lib/view.js";
 
 const TLS13 = { state: "secure", protocolVersion: "TLSv1.3", cipherSuite: "TLS_AES_128_GCM_SHA256" };
 const PQT = {
@@ -149,7 +149,7 @@ test("setups are listed lowest first with counts and origins", () => {
   assert.equal(pqt.cipherSuite, "TLS_AES_128_GCM_SHA256");
   assert.equal(pqt.count, 2);
   assert.equal(pqt.fromCache, 1);
-  assert.deepEqual(pqt.origins, [{ name: "a.example", count: 2 }]);
+  assert.deepEqual(pqt.origins, [{ name: "https://a.example", count: 2 }]);
   assert.equal(pqt.unlisted, 0);
   assert.equal(v.origins, 2);
   assert.equal(v.originsMore, false);
@@ -229,18 +229,11 @@ test("signature scheme: IANA name, Firefox name and type", () => {
   ]);
 });
 
-test("origin labels leave out https:// only", () => {
-  assert.equal(originLabel("https://a.example"), "a.example");
-  assert.equal(originLabel("https://a.example:8443"), "a.example:8443");
-  assert.equal(originLabel("http://a.example"), "http://a.example");
-  assert.equal(originLabel("wss://a.example"), "wss://a.example");
-});
-
 test("origins are listed most responses first", () => {
   const v = buildView(tab([
     ["main_frame", "https://a.example/", PQT],
     ["script", "https://b.example/1.js", PQT],
     ["script", "https://b.example/2.js", PQT],
   ]), "https://a.example/");
-  assert.deepEqual(v.setups[0].origins, [{ name: "b.example", count: 2 }, { name: "a.example", count: 1 }]);
+  assert.deepEqual(v.setups[0].origins, [{ name: "https://b.example", count: 2 }, { name: "https://a.example", count: 1 }]);
 });
