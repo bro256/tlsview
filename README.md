@@ -12,15 +12,20 @@ Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ) and
 
 ## Install
 
-Requires Firefox 140 or later (desktop).
+Install from Firefox Add-ons: **[TLSView on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/tlsview/)**. Requires Firefox 140 or later (desktop).
+
+1. Optional: pin the icon (puzzle-piece button → TLSView → **Pin to Toolbar**).
+2. Click the icon. If asked, allow access to all sites: TLSView needs it to read the TLS details of each site.
+
+### From source
+
+To run the code from this repository instead, for example to test a change:
 
 1. Download this repository (**Code → Download ZIP**) and unzip it, or clone it with git.
 2. In Firefox, open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and select `manifest.json` in the unzipped folder.
-4. Optional: pin the icon (puzzle-piece button → TLSView → **Pin to Toolbar**).
-5. Click the icon. If asked, allow access to all sites: TLSView needs it to read the TLS details of each site.
 
-A temporary add-on is removed when Firefox closes; load it again after a restart.
+A temporary add-on is removed when Firefox closes; load it again after a restart. Both copies use the same add-on ID, so remove or disable the one from addons.mozilla.org first, to be sure which one you are testing.
 
 ## Levels
 
