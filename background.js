@@ -3,6 +3,7 @@ import { summarize } from "./lib/ladder.js";
 import { iconFor, NOT_INSPECTABLE, RESTRICTED } from "./lib/icon.js";
 import { isRestrictedUrl } from "./lib/restricted.js";
 import { createWriter } from "./lib/writer.js";
+import { orTimeout } from "./lib/timeout.js";
 
 // Must match "host_permissions" in manifest.json.
 const HOST_PERMISSIONS = { origins: ["*://*/*"] };
@@ -128,18 +129,28 @@ async function record(details, info) {
 // a Promise, and Firefox holds the response until that Promise settles, so
 // the listener waits for getSecurityInfo() only. It never changes, blocks
 // or redirects a request.
+//
+// Safeguard: if getSecurityInfo() has not answered after
+// SECURITY_INFO_TIMEOUT_MS, the response is released and not recorded, so
+// TLSView can never hold a page back for longer than that.
+const SECURITY_INFO_TIMEOUT_MS = 2000;
+
 browser.webRequest.onHeadersReceived.addListener(
   async (details) => {
     // Requests not tied to a tab (tabId -1) are not recorded.
     if (details.tabId === -1) return;
     let info;
     try {
-      info = await browser.webRequest.getSecurityInfo(details.requestId, {});
+      info = await orTimeout(
+        browser.webRequest.getSecurityInfo(details.requestId, {}),
+        SECURITY_INFO_TIMEOUT_MS,
+      );
     } catch (e) {
       console.error("TLSView: getSecurityInfo failed for", originOf(details.url), e);
       return;
     }
-    // undefined when the request is no longer known to Firefox.
+    // undefined when the request is no longer known to Firefox, or after
+    // the timeout.
     if (!info) return;
     // Not awaited: the response does not wait for the record.
     record(details, info).catch((e) => console.error("TLSView: could not record a response", e));

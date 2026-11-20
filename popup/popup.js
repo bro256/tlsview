@@ -13,7 +13,7 @@ const STORAGE_PREFIX = "tab:";
 const content = document.getElementById("content");
 const originEl = document.getElementById("origin");
 
-// Setups the user has expanded, kept across live updates.
+// Keys of the setups the user has expanded, kept across live updates.
 const expanded = new Set();
 
 function el(tag, props = {}, children = []) {
@@ -112,25 +112,49 @@ function renderSetup(setup) {
         el("div", { className: "title", text: setup.title }),
         setup.cipherSuite && el("div", { className: "cipher", text: setup.cipherSuite }),
         el("div", { className: "meta", text: meta }),
+        setup.certErrors > 0 && el("div", {
+          className: "cert",
+          text: `${plural(setup.certErrors, "response")} with an overridden certificate error`,
+        }),
       ]),
       el("span", { className: "chevron", "aria-hidden": "true", text: "›" }),
     ]),
     el("ul", { className: "origins" }, items),
   ]);
-  if (expanded.has(setup.title)) details.open = true;
+  if (expanded.has(setup.key)) details.open = true;
   details.addEventListener("toggle", () => {
-    if (details.open) expanded.add(setup.title);
-    else expanded.delete(setup.title);
+    if (details.open) expanded.add(setup.key);
+    else expanded.delete(setup.key);
   });
-  return el("li", {}, [details]);
+  return el("li", { "data-key": setup.key }, [details]);
 }
 
+// The setup row with this key, or null.
+function setupRow(key) {
+  return [...content.querySelectorAll("li[data-key]")].find((li) => li.dataset.key === key) ?? null;
+}
+
+let lastView = null; // JSON of the view on screen
+
 function renderView(view) {
+  // Live updates often change nothing visible: leave the popup as it is, so
+  // focus and scroll position stay and screen readers are not interrupted.
+  const json = JSON.stringify(view);
+  if (json === lastView) return;
+  lastView = json;
+
   originEl.textContent = view.origin ?? "";
   if (view.status !== "ok") {
     renderMessage(view.message, view.hint);
     return;
   }
+  // Keyboard focus on a setup is put back after the list is rebuilt.
+  const focusedKey = document.activeElement?.closest?.("li[data-key]")?.dataset.key;
+  renderOk(view);
+  if (focusedKey) setupRow(focusedKey)?.querySelector("summary")?.focus();
+}
+
+function renderOk(view) {
   content.replaceChildren(
     renderPage(view.page),
     renderWarnings(view.warnings) ?? "",
@@ -179,4 +203,7 @@ async function start() {
   await update();
 }
 
-start();
+start().catch((e) => {
+  console.error("TLSView: could not show the popup", e);
+  renderMessage("TLSView could not read this tab.", "Close the popup and open it again.");
+});

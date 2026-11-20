@@ -129,7 +129,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
   margin: 0;
   padding: 8px 14px 8px 36px;
   background: var(--warn-bg) no-repeat 14px 9px / 14px 14px
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23f59e0b' d='M8 1 15.5 14.5H.5Z'/%3E%3Cpath fill='%23ffffff' d='M7.2 5.5h1.6v5H7.2zM7.2 11.6h1.6v1.6H7.2z'/%3E%3C/svg%3E");
+    url("../icons/warning.svg");
   border-left: 3px solid var(--warn-line);
   border-bottom: 1px solid var(--line);
   color: var(--warn-text);
@@ -158,6 +158,7 @@ summary .text { flex: 1; min-width: 0; }
 summary .title { font-weight: 600; overflow-wrap: anywhere; }
 summary .cipher { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
 summary .meta { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+summary .cert { font-size: 11px; color: var(--warn-text); }
 summary .chevron { display: inline-block; color: var(--muted); transition: transform 0.15s; }
 details[open] summary .chevron { transform: rotate(90deg); }
 

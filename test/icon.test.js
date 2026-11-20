@@ -90,6 +90,16 @@ test("lower step: warning icon and line", () => {
   assert.match(i.title, /\nWarning: some responses in this tab used a lower level than the page: TLS 1\.2$/);
 });
 
+test("overridden certificate error: warning icon and line", () => {
+  const own = page({ ...PQT, isUntrusted: true });
+  assert.equal(own.path, "icons/step-pqt-warn.svg");
+  assert.match(own.title, /\nWarning: the page's certificate has an error that was overridden: not trusted$/);
+
+  const other = withOther(PQT, { ...PQT, isNotValidAtThisTime: true });
+  assert.equal(other.path, "icons/step-pqt-warn.svg");
+  assert.match(other.title, /\nWarning: a certificate error was overridden for some responses in this tab$/);
+});
+
 test("pure post-quantum is lower than hybrid post-quantum", () => {
   assert.equal(withOther(PQT, PQ).path, "icons/step-pqt-warn.svg");
   assert.equal(withOther(PQ, PQT).path, "icons/step-pq.svg");

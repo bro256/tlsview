@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   MAX_ITEMS,
+  certErrorOf,
   originOf,
   newTabState,
   setupOf,
@@ -42,7 +43,7 @@ test("records the main frame with its signature", () => {
   assert.equal(s.pageOrigin, "https://example.com");
   assert.deepEqual(s.mainFrame, {
     ...setupOf(HYBRID), signatureSchemeName: "ECDSA-P256-SHA256",
-    hsts: null, usedEch: null, hstsHeader: null,
+    hsts: null, usedEch: null, hstsHeader: null, certError: null,
   });
 });
 
@@ -99,6 +100,22 @@ test("caps listed origins and counts the rest as unlisted", () => {
   assert.equal(only(s).unlisted, 5);
   assert.equal(only(s).origins["https://h0.example"], 2);
   assert.equal(only(s).count, MAX_ITEMS + 6);
+});
+
+test("certErrorOf names the overridden certificate error", () => {
+  assert.equal(certErrorOf(HYBRID), null);
+  assert.equal(certErrorOf({ ...HYBRID, isUntrusted: true }), "untrusted");
+  assert.equal(certErrorOf({ ...HYBRID, isDomainMismatch: true }), "domain-mismatch");
+  assert.equal(certErrorOf({ ...HYBRID, isNotValidAtThisTime: true }), "not-valid-at-this-time");
+  assert.equal(certErrorOf({ ...HYBRID, isUntrusted: false }), null);
+});
+
+test("counts responses with an overridden certificate error", () => {
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "https://a.example/"), { ...HYBRID, isUntrusted: true });
+  recordResponse(s, r("image", "https://a.example/i.png"), HYBRID);
+  assert.equal(only(s).certErrors, 1);
+  assert.equal(s.mainFrame.certError, "untrusted");
 });
 
 test("ignores responses whose URL has no origin", () => {

@@ -55,6 +55,20 @@ Shown for the page itself, not rated.
 
 Firefox gets a site's ECH key from its DNS HTTPS record. Without DNS over HTTPS, whether that record can be read depends on the operating system and DNS server; on Windows 10, Firefox does not query it from the system DNS. If ECH is never used, turn on DNS over HTTPS (Settings → Privacy & Security), restart Firefox and retry.
 
+## Certificate errors
+
+Firefox shows a warning page for these sites. Choose **Advanced → Accept the Risk and Continue**, check, then remove the exception (Settings → Privacy & Security → View Certificates → Servers).
+
+| Check | Expected |
+|---|---|
+| Open https://expired.badssl.com/ | Icon with the corner mark. **Certificate:** `Error overridden: expired or not yet valid. The server's identity is not verified.` The same reason in the warning and the tooltip. |
+| Open https://wrong.host.badssl.com/ | As above, with `not valid for this host name` |
+| Open https://self-signed.badssl.com/ | As above, with `not trusted` |
+| Open any https site without an exception | **Certificate:** `Verified by Firefox`; no certificate warning |
+| Open https://static-rsa.badssl.com/ | **Signature scheme:** `None: RSA key transport has no handshake signature` |
+
+The test.openquantumsafe.org pages also need an exception, so they show the corner mark and `not trusted` as well.
+
 ## Encryption
 
 | Check | Expected |
@@ -87,7 +101,7 @@ Report the result of each check, including when a group is `not reported`, so RE
 ## Behaviour
 
 - **Warning:** on a page whose resources come from servers with different setups, the icon shows the corner mark when any setup is on a lower level, and the popup and tooltip name the lower levels.
-- **Live update:** open the popup while a large page is loading; setups and counts update.
+- **Live update:** open the popup while a large page is loading; setups and counts update. An expanded setup stays expanded, and others with the same title (same group, another cipher suite) stay closed.
 - **Navigation:** open a large page and immediately click a link to another site; the new page's popup does not list the first site's servers.
 - **Origins only:** expand a setup; it lists origins (scheme, host, and the port if not the default), each with a response count, most first. No paths appear. The counts add up to the setup's responses.
 - **Counts line:** the setups header and each setup show `N origins · N responses`, plus `(N from cache)` when any came from cache. The header's numbers are the totals for the tab; an origin used by two setups counts once.

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "TLSView",
-  "version": "0.1.18",
-  "description": "Shows which TLS version and key exchange a site uses: traditional, PQ/T hybrid or pure post-quantum (ML-KEM).",
+  "version": "0.1.19",
+  "description": "Shows which TLS version and key exchange a site uses: traditional, hybrid post-quantum (PQ/T) or pure post-quantum (ML-KEM).",
   "icons": {
     "48": "icons/icon.svg",
     "96": "icons/icon.svg"
@@ -21,7 +21,7 @@
     "default_popup": "popup/popup.html"
   },
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    "extension_pages": "default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
   },
   "background": {
     "scripts": [

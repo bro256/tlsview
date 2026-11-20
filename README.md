@@ -44,8 +44,9 @@ A level is set by the TLS version and the key exchange only. The cipher suite, f
 | <img src="icons/step-insecure.svg" width="24" alt="✕"> | No HTTPS | Loaded over plain HTTP, without TLS. | – |
 | <img src="icons/step-unknown.svg" width="24" alt="?"> | Not determined | TLS version or key exchange group not reported, not recognised, or obsolete; or an https response that Firefox reported without TLS details. Not ranked. | – |
 
-A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ with warning">) means other responses in the tab need attention:
+A corner mark on the icon (<img src="icons/step-pqt-warn.svg" width="20" alt="PQ with warning">) means something in the tab needs attention:
 
+- **Certificate error overridden:** Firefox made a connection although its certificate failed verification, because an exception was added for the site. The server's identity is then not verified, whatever the key exchange. Reported for the page itself or for other responses in the tab.
 - **Lower level:** at least one response in the tab is on a lower level than the page. The warning names those levels, e.g. `TLS 1.2, TLS 1.3 · traditional`.
 - **Could not be checked:** at least one response is *Not determined*. Not shown when the page itself is *Not determined* or has no HTTPS.
 
@@ -114,8 +115,9 @@ TLS 1.0 is the lowest version Firefox can use. SSL 2.0 and SSL 3.0 cannot be ena
 | Key exchange | Key exchange | IANA group name, and Firefox's name if different; `RSA key transport` for `TLS_RSA_WITH_*` cipher suites |
 | | Type | Traditional, PQ/T hybrid or post-quantum, with the components and the specification |
 | | Forward secrecy | `Yes` for an ephemeral key exchange: ECDHE or DHE cipher suites in TLS 1.2 and earlier, and every TLS 1.3 connection Firefox makes. TLS 1.3 also allows PSK-only resumption (`psk_ke`) without forward secrecy, but Firefox resumes sessions only with `psk_dhe_ke`. `No` for RSA key transport. |
-| Authentication | Signature scheme | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2): IANA name, and Firefox's name. Not the certificate's key or its CA signature. |
+| Authentication | Signature scheme | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2): IANA name, and Firefox's name. Not the certificate's key or its CA signature. `None` for RSA key transport, which has no handshake signature. A resumed session has no new signature; Firefox reports the scheme of the original handshake. |
 | | Type | `Traditional` (RSA, ECDSA) or `Post-quantum` (ML-DSA, FIPS 204) |
+| | Certificate | Firefox's verification result, not TLSView's: `Verified by Firefox`, or the error that was overridden with an exception (not trusted, not valid for this host name, expired or not yet valid) |
 | Extensions and headers | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
 | | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit) |
 
@@ -139,6 +141,7 @@ npm run build    # packages the extension into web-ext-artifacts/
 - Firefox hides all requests on some Mozilla sites, such as addons.mozilla.org, from extensions. These sites cannot be inspected.
 - A page restored from the back/forward cache sends no requests. If an earlier page in the tab had the same origin, that page's details are shown.
 - Late responses from an earlier page of the same origin are counted for the current page.
+- A link that starts a download instead of opening a page replaces the tab's record with the download's response. The popup then shows the download's connection (same origin) or `The page itself was not seen` (another origin) until the page is reloaded.
 - A response served from Firefox's cache shows the TLS details of the connection that originally fetched it.
 - TLS 1.3 session resumption and 0-RTT early data reuse a secret from an earlier handshake, and 0-RTT data has no forward secrecy. Firefox does not tell extensions whether either was used.
 

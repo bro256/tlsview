@@ -73,6 +73,7 @@ test("page section for a hybrid post-quantum page", () => {
     { title: "Authentication", rows: [
       ["Signature scheme", "ecdsa_secp256r1_sha256 (Firefox: ECDSA-P256-SHA256)"],
       ["Type", "Traditional"],
+      ["Certificate", "Verified by Firefox"],
     ] },
     { title: "Extensions and headers", rows: [
       ["ECH", "Not used"],
@@ -130,7 +131,7 @@ test("page section for plain HTTP and for an unknown key exchange", () => {
 
   const unknown = buildView(tab([["main_frame", "https://a.example/", NO_GROUP]]), "https://a.example/");
   assert.equal(unknown.page.icon, "icons/step-unknown.svg");
-  assert.deepEqual(rows(unknown).map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "AEAD", "Key exchange", "Forward secrecy", "Signature scheme", "ECH", "HSTS"]);
+  assert.deepEqual(rows(unknown).map((r) => r[0]), ["Protocol", "Cipher suite", "Encryption", "AEAD", "Key exchange", "Forward secrecy", "Signature scheme", "Certificate", "ECH", "HSTS"]);
   assert.deepEqual(rows(unknown)[4], ["Key exchange", "not reported"]);
   assert.deepEqual(rows(unknown)[5], ["Forward secrecy", "not determined"]);
 });
@@ -210,23 +211,76 @@ test("RSA key transport: key exchange row", () => {
   ]);
 });
 
+const CERT_OK = ["Certificate", "Verified by Firefox"];
+
 test("signature scheme: IANA name, Firefox name and type", () => {
   const auth = (info) => buildView(tab([["main_frame", "https://a.example/", info]]), "https://a.example/")
     .page.sections.find((x) => x.title === "Authentication").rows;
   assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: "ML-DSA-65" }), [
     ["Signature scheme", "mldsa65 (Firefox: ML-DSA-65)"],
     ["Type", "Post-quantum: ML-DSA, FIPS 204"],
+    CERT_OK,
   ]);
   assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: "RSA-PKCS1-SHA1MD5" }), [
     ["Signature scheme", "RSA-PKCS1-SHA1MD5"],
     ["Type", "Traditional"],
+    CERT_OK,
   ]);
   assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: "unknown signature" }), [
     ["Signature scheme", "unknown signature"],
+    CERT_OK,
   ]);
   assert.deepEqual(auth({ ...TRAD13, signatureSchemeName: undefined }), [
     ["Signature scheme", "not reported"],
+    CERT_OK,
   ]);
+});
+
+// Firefox reports no signature scheme for RSA key transport ("none" is left
+// out of SecurityInfo): there is no handshake signature.
+test("RSA key transport has no handshake signature", () => {
+  const rsa = {
+    state: "secure", protocolVersion: "TLSv1.2",
+    cipherSuite: "TLS_RSA_WITH_AES_128_GCM_SHA256",
+  };
+  const v = buildView(tab([["main_frame", "https://a.example/", rsa]]), "https://a.example/");
+  assert.deepEqual(v.page.sections.find((x) => x.title === "Authentication").rows, [
+    ["Signature scheme", "None: RSA key transport has no handshake signature"],
+    CERT_OK,
+  ]);
+});
+
+test("an overridden certificate error is shown and warned about", () => {
+  const cert = (v) => rows(v).find((r) => r[0] === "Certificate")[1];
+  const page = (flag) => buildView(
+    tab([["main_frame", "https://a.example/", { ...PQT, [flag]: true }]]), "https://a.example/");
+
+  const untrusted = page("isUntrusted");
+  assert.equal(cert(untrusted), "Error overridden: not trusted. The server's identity is not verified.");
+  assert.deepEqual(untrusted.warnings, ["the page's certificate has an error that was overridden: not trusted"]);
+  assert.equal(untrusted.setups[0].certErrors, 1);
+
+  assert.match(cert(page("isDomainMismatch")), /not valid for this host name/);
+  assert.match(cert(page("isNotValidAtThisTime")), /expired or not yet valid/);
+
+  // Only another response in the tab.
+  const other = buildView(tab([
+    ["main_frame", "https://a.example/", PQT],
+    ["script", "https://b.example/x.js", { ...PQT, isUntrusted: true }],
+  ]), "https://a.example/");
+  assert.equal(cert(other), "Verified by Firefox");
+  assert.deepEqual(other.warnings, ["a certificate error was overridden for some responses in this tab"]);
+  assert.equal(other.setups[0].certErrors, 1);
+});
+
+test("setups with the same title have different keys", () => {
+  const v = buildView(tab([
+    ["main_frame", "https://a.example/", PQT],
+    ["script", "https://b.example/x.js", { ...PQT, cipherSuite: "TLS_AES_256_GCM_SHA384" }],
+  ]), "https://a.example/");
+  assert.equal(v.setups.length, 2);
+  assert.equal(v.setups[0].title, v.setups[1].title);
+  assert.notEqual(v.setups[0].key, v.setups[1].key);
 });
 
 test("origins are listed most responses first", () => {
