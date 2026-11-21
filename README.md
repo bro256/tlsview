@@ -12,7 +12,7 @@ Terms follow RFC 9794: *traditional* (not post-quantum), *post-quantum* (PQ) and
 
 ## Install
 
-Install from Firefox Add-ons: **[TLSView on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/tlsview/)**. Requires Firefox 140 or later (desktop).
+Install from Firefox Add-ons: **[TLSView on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/tlsview/)**. Requires Firefox 142 or later, on desktop. TLSView is not offered for Firefox for Android, because it has not been tested there.
 
 1. Optional: pin the icon (puzzle-piece button → TLSView → **Pin to Toolbar**).
 2. Click the icon. If asked, allow access to all sites: TLSView needs it to read the TLS details of each site.
