@@ -100,6 +100,15 @@ test("overridden certificate error: warning icon and line", () => {
   assert.match(other.title, /\nWarning: a certificate error was overridden for some responses in this tab$/);
 });
 
+test("a root added to this computer: tooltip note, no warning icon", () => {
+  const i = page({
+    ...PQT,
+    certificates: [{ subject: "CN=a.example", isBuiltInRoot: false }, { subject: "CN=Contoso Root CA", isBuiltInRoot: false }],
+  });
+  assert.equal(i.path, "icons/step-pqt.svg");
+  assert.match(i.title, /\nNote: certificate root added to this computer \(Contoso Root CA\)$/);
+});
+
 test("pure post-quantum is lower than hybrid post-quantum", () => {
   assert.equal(withOther(PQT, PQ).path, "icons/step-pqt-warn.svg");
   assert.equal(withOther(PQ, PQT).path, "icons/step-pq.svg");

@@ -273,6 +273,28 @@ test("an overridden certificate error is shown and warned about", () => {
   assert.equal(other.setups[0].certErrors, 1);
 });
 
+test("a root added to this computer: certificate row and a neutral note", () => {
+  const withRoot = (subject) => ({
+    ...PQT,
+    certificates: [{ subject: "CN=a.example", isBuiltInRoot: false }, { subject, isBuiltInRoot: false }],
+  });
+  const v = buildView(tab([["main_frame", "https://a.example/", withRoot("CN=Contoso Root CA,O=Contoso")]]), "https://a.example/");
+  assert.equal(rows(v).find((r) => r[0] === "Certificate")[1],
+    "Verified by Firefox, through a root added to this computer: Contoso Root CA");
+  assert.equal(v.notes.length, 1);
+  assert.match(v.notes[0], /^The certificate chains to a root added to this computer/);
+  assert.match(v.notes[0], /describe the connection to that proxy, not to the site\.$/);
+  assert.deepEqual(v.warnings, []);
+  assert.equal(v.page.icon, "icons/step-pqt.svg");
+
+  const noName = buildView(tab([["main_frame", "https://a.example/", withRoot("O=Contoso")]]), "https://a.example/");
+  assert.equal(rows(noName).find((r) => r[0] === "Certificate")[1],
+    "Verified by Firefox, through a root added to this computer");
+
+  const pub = buildView(tab([["main_frame", "https://a.example/", PQT]]), "https://a.example/");
+  assert.deepEqual(pub.notes, []);
+});
+
 test("setups with the same title have different keys", () => {
   const v = buildView(tab([
     ["main_frame", "https://a.example/", PQT],

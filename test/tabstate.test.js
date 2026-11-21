@@ -43,7 +43,7 @@ test("records the main frame with its signature", () => {
   assert.equal(s.pageOrigin, "https://example.com");
   assert.deepEqual(s.mainFrame, {
     ...setupOf(HYBRID), signatureSchemeName: "ECDSA-P256-SHA256",
-    hsts: null, usedEch: null, hstsHeader: null, certError: null,
+    hsts: null, usedEch: null, hstsHeader: null, certError: null, localRoot: null,
   });
 });
 
@@ -100,6 +100,25 @@ test("caps listed origins and counts the rest as unlisted", () => {
   assert.equal(only(s).unlisted, 5);
   assert.equal(only(s).origins["https://h0.example"], 2);
   assert.equal(only(s).count, MAX_ITEMS + 6);
+});
+
+test("stores the common name of a locally added root for the page only", () => {
+  const chain = (rootBuiltIn) => ({
+    ...HYBRID,
+    certificates: [
+      { subject: "CN=intranet.example", isBuiltInRoot: false },
+      { subject: "CN=Contoso Root CA,O=Contoso,C=LT", isBuiltInRoot: rootBuiltIn },
+    ],
+  });
+  const s = newTabState();
+  recordResponse(s, r("main_frame", "https://a.example/"), chain(false));
+  assert.deepEqual(s.mainFrame.localRoot, { commonName: "Contoso Root CA" });
+  recordResponse(s, r("script", "https://a.example/x.js"), chain(false));
+  assert.ok(!JSON.stringify(only(s)).includes("Contoso"));
+
+  const pub = newTabState();
+  recordResponse(pub, r("main_frame", "https://a.example/"), chain(true));
+  assert.equal(pub.mainFrame.localRoot, null);
 });
 
 test("certErrorOf names the overridden certificate error", () => {

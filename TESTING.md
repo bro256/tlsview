@@ -69,6 +69,19 @@ Firefox shows a warning page for these sites. Choose **Advanced → Accept the R
 
 The test.openquantumsafe.org pages also need an exception, so they show the corner mark and `not trusted` as well.
 
+## Root added to this computer
+
+Use a separate Firefox profile (`about:profiles` → **Create a New Profile**), so the test root never reaches your everyday profile.
+
+| Check | Expected |
+|---|---|
+| Any public https site, e.g. https://github.com/ | **Certificate:** `Verified by Firefox`; no blue note |
+| An https site whose certificate comes from your own CA, with the CA's root imported in the test profile (Settings → Privacy & Security → View Certificates → Authorities → Import, tick "Trust this CA to identify websites") | **Certificate:** `Verified by Firefox, through a root added to this computer: <root's common name>`. A blue note says the root was added to this computer. The icon has no corner mark. The tooltip ends with `Note: certificate root added to this computer (<name>)`. Copy report has a **Notes** section. |
+| A public site through an intercepting proxy, e.g. `mitmproxy` with its CA imported in the test profile | As above, with the proxy's root name (`mitmproxy`) |
+| A site with an overridden certificate error, e.g. https://self-signed.badssl.com/ | No blue note: the certificate error warning only |
+
+Remove the imported root and delete the test profile afterwards.
+
 ## Encryption
 
 | Check | Expected |

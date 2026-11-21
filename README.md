@@ -117,11 +117,13 @@ TLS 1.0 is the lowest version Firefox can use. SSL 2.0 and SSL 3.0 cannot be ena
 | | Forward secrecy | `Yes` for an ephemeral key exchange: ECDHE or DHE cipher suites in TLS 1.2 and earlier, and every TLS 1.3 connection Firefox makes. TLS 1.3 also allows PSK-only resumption (`psk_ke`) without forward secrecy, but Firefox resumes sessions only with `psk_dhe_ke`. `No` for RSA key transport. |
 | Authentication | Signature scheme | Signature scheme the server used in the handshake (CertificateVerify in TLS 1.3, ServerKeyExchange in TLS 1.2): IANA name, and Firefox's name. Not the certificate's key or its CA signature. `None` for RSA key transport, which has no handshake signature. A resumed session has no new signature; Firefox reports the scheme of the original handshake. |
 | | Type | `Traditional` (RSA, ECDSA) or `Post-quantum` (ML-DSA, FIPS 204) |
-| | Certificate | Firefox's verification result, not TLSView's: `Verified by Firefox`, or the error that was overridden with an exception (not trusted, not valid for this host name, expired or not yet valid) |
+| | Certificate | Firefox's verification result, not TLSView's: `Verified by Firefox`, or the error that was overridden with an exception (not trusted, not valid for this host name, expired or not yet valid). When the chain ends in a root added to this computer rather than one built into Firefox, the root's common name is added, e.g. `Verified by Firefox, through a root added to this computer: Contoso Root CA`. |
 | Extensions and headers | ECH | Encrypted Client Hello: `Used` if the server accepted it, otherwise `Not used` |
 | | HSTS | The `Strict-Transport-Security` header as sent and checked with Firefox's parsing rules, or whether Firefox already knew the site as HSTS (preload list or an earlier visit) |
 
 **TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its origins and responses, e.g. `2 origins · 38 responses (12 from cache)`, and, when expanded, each origin (scheme, host and port, e.g. `https://example.com`) with its number of responses. Individual responses are not listed, only origins: TLS is negotiated per origin, and full URLs can contain personal data or secrets, such as session tokens, so they are never stored. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
+
+**Root added to this computer.** A chain ending in a root added locally (by you, by enterprise policy or by security software) means either a private PKI, such as an intranet, or TLS interception, such as an inspection proxy or antivirus HTTPS scanning. TLSView cannot tell which, so it shows a neutral note with the root's common name, without changing the icon. With interception, everything shown describes the connection to the proxy, not to the site: a proxy without ML-KEM shows a traditional key exchange even when the site offers a hybrid one. A public site whose root is not built into Firefox is being intercepted.
 
 **Copy report** puts a plain-text report of what the popup shows on the clipboard: the page's details, any warnings, and every TLS setup with its origins and counts, plus the time (UTC) and the Firefox and TLSView versions. Use it to record a check, for example in a ticket or next to a cryptographic inventory. The report is only copied; TLSView sends it nowhere.
 
@@ -139,6 +141,7 @@ npm run build    # packages the extension into web-ext-artifacts/
 
 ## Known limitations
 
+- TLSView shows the connection from Firefox to the server that terminates TLS. That can be a CDN, load balancer or reverse proxy, with a publicly trusted certificate for the site; connections behind it, such as from a CDN to the site's own server, are not visible to the browser.
 - Firefox only. The extension uses `webRequest.getSecurityInfo()`, which other browsers do not provide.
 - Firefox hides all requests on some Mozilla sites, such as addons.mozilla.org, from extensions. These sites cannot be inspected.
 - A page restored from the back/forward cache sends no requests. If an earlier page in the tab had the same origin, that page's details are shown.
@@ -149,7 +152,7 @@ npm run build    # packages the extension into web-ext-artifacts/
 
 ## Privacy
 
-TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. Only origins are stored, with a response count: no paths, query strings or fragments, so the popup and the copied report stay safe to share. A record is deleted when its tab closes, and all records when Firefox closes.
+TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. Only origins are stored, with a response count: no paths, query strings or fragments, so the popup and the copied report stay safe to share. Of the page's certificate chain, only the root's common name is kept, and only when the root was added to this computer; it can name your organisation or security software, so check it before sharing a screenshot or report. A record is deleted when its tab closes, and all records when Firefox closes.
 
 ## References
 

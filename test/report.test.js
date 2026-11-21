@@ -88,3 +88,12 @@ test("report without a Firefox version, with certificate overrides", () => {
   assert.match(text, /^ {4}Certificate: Error overridden: not trusted\./m);
   assert.match(text, /^ {4}1 with an overridden certificate error$/m);
 });
+
+test("report lists notes", () => {
+  const text = reportText(view([["main_frame", "https://a.example/", {
+    ...PQT,
+    certificates: [{ subject: "CN=a.example", isBuiltInRoot: false }, { subject: "CN=Contoso Root CA", isBuiltInRoot: false }],
+  }]]), META);
+  assert.match(text, /^ {4}Certificate: Verified by Firefox, through a root added to this computer: Contoso Root CA$/m);
+  assert.match(text, /^Notes:\n {2}- The certificate chains to a root added to this computer/m);
+});

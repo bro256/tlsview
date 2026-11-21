@@ -91,6 +91,11 @@ function renderWarnings(warnings) {
   return el("div", { className: "warnings", role: "status" }, warnings.map(renderWarning));
 }
 
+function renderNotes(notes) {
+  if (!notes.length) return null;
+  return el("div", { className: "notes" }, notes.map((text) => el("p", { text })));
+}
+
 function renderSetup(setup) {
   const meta = countsLine(setup.origins.length, setup.unlisted > 0, setup.count, setup.fromCache);
 
@@ -178,6 +183,7 @@ function renderView(view) {
 function renderOk(view) {
   content.replaceChildren(
     renderPage(view.page),
+    renderNotes(view.notes) ?? "",
     renderWarnings(view.warnings) ?? "",
     el("section", {}, [
       el("h2", {}, [

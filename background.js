@@ -142,7 +142,10 @@ browser.webRequest.onHeadersReceived.addListener(
     let info;
     try {
       info = await orTimeout(
-        browser.webRequest.getSecurityInfo(details.requestId, {}),
+        // The certificate chain only for the page itself (lib/certroot.js).
+        browser.webRequest.getSecurityInfo(details.requestId, {
+          certificateChain: details.type === "main_frame",
+        }),
         SECURITY_INFO_TIMEOUT_MS,
       );
     } catch (e) {
