@@ -1,4 +1,5 @@
-import { buildView, plural } from "../lib/view.js";
+import { buildView, plural, countsLine } from "../lib/view.js";
+import { reportText } from "../lib/report.js";
 
 // The popup shows the active tab's record, read from storage.session, where
 // background.js keeps it. It updates live while the page is still loading.
@@ -12,6 +13,9 @@ const STORAGE_PREFIX = "tab:";
 
 const content = document.getElementById("content");
 const originEl = document.getElementById("origin");
+const copyBar = document.getElementById("copy");
+const copyButton = document.getElementById("copy-button");
+const copyStatus = document.getElementById("copy-status");
 
 // Keys of the setups the user has expanded, kept across live updates.
 const expanded = new Set();
@@ -87,13 +91,6 @@ function renderWarnings(warnings) {
   return el("div", { className: "warnings", role: "status" }, warnings.map(renderWarning));
 }
 
-// "7 origins · 56 responses (28 from cache)"
-function countsLine(origins, more, responses, fromCache) {
-  let line = `${plural(origins, "origin")}${more ? "+" : ""} · ${plural(responses, "response")}`;
-  if (fromCache) line += ` (${fromCache} from cache)`;
-  return line;
-}
-
 function renderSetup(setup) {
   const meta = countsLine(setup.origins.length, setup.unlisted > 0, setup.count, setup.fromCache);
 
@@ -135,6 +132,26 @@ function setupRow(key) {
 }
 
 let lastView = null; // JSON of the view on screen
+let shownView = null; // the view on screen when there is a report to copy
+
+// Copies the report of what the popup shows to the clipboard. Writing to
+// the clipboard from a click needs no extra permission.
+copyButton.addEventListener("click", async () => {
+  if (!shownView) return;
+  try {
+    // getBrowserInfo() is a Firefox API; the report works without it.
+    const firefox = await browser.runtime.getBrowserInfo().then((b) => b.version, () => null);
+    await navigator.clipboard.writeText(reportText(shownView, {
+      version: browser.runtime.getManifest().version,
+      firefox,
+      time: new Date(),
+    }));
+    copyStatus.textContent = "Copied.";
+  } catch (e) {
+    console.error("TLSView: could not copy the report", e);
+    copyStatus.textContent = "Could not copy.";
+  }
+});
 
 function renderView(view) {
   // Live updates often change nothing visible: leave the popup as it is, so
@@ -142,6 +159,10 @@ function renderView(view) {
   const json = JSON.stringify(view);
   if (json === lastView) return;
   lastView = json;
+
+  shownView = view.status === "ok" ? view : null;
+  copyBar.hidden = !shownView;
+  copyStatus.textContent = "";
 
   originEl.textContent = view.origin ?? "";
   if (view.status !== "ok") {

@@ -105,4 +105,5 @@ Report the result of each check, including when a group is `not reported`, so RE
 - **Navigation:** open a large page and immediately click a link to another site; the new page's popup does not list the first site's servers.
 - **Origins only:** expand a setup; it lists origins (scheme, host, and the port if not the default), each with a response count, most first. No paths appear. The counts add up to the setup's responses.
 - **Counts line:** the setups header and each setup show `N origins · N responses`, plus `(N from cache)` when any came from cache. The header's numbers are the totals for the tab; an origin used by two setups counts once.
+- **Copy report:** click **Copy report**, then paste into a text editor. The text matches the popup: page details, warnings, setups with origins and counts, and a line with the time and versions. It contains no paths or query strings. On a page that cannot be inspected, the button is not shown.
 - **Tab closed:** the tab's record is deleted (check `storage.session` in `about:debugging` → Inspect → Storage).

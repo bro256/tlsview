@@ -123,6 +123,8 @@ TLS 1.0 is the lowest version Firefox can use. SSL 2.0 and SSL 3.0 cannot be ena
 
 **TLS setups in this tab** groups every response in the tab by TLS version, key exchange group and cipher suite. Each setup shows its origins and responses, e.g. `2 origins · 38 responses (12 from cache)`, and, when expanded, each origin (scheme, host and port, e.g. `https://example.com`) with its number of responses. Individual responses are not listed, only origins: TLS is negotiated per origin, and full URLs can contain personal data or secrets, such as session tokens, so they are never stored. Counts are HTTP responses, not TLS connections: many responses can share one connection, and a response served from cache involves no handshake.
 
+**Copy report** puts a plain-text report of what the popup shows on the clipboard: the page's details, any warnings, and every TLS setup with its origins and counts, plus the time (UTC) and the Firefox and TLSView versions. Use it to record a check, for example in a ticket or next to a cryptographic inventory. The report is only copied; TLSView sends it nowhere.
+
 ## Development
 
 Needs [Node.js](https://nodejs.org/) 22 or later. The tools ([web-ext](https://github.com/mozilla/web-ext)) are for development only and are not part of the extension.
@@ -147,7 +149,7 @@ npm run build    # packages the extension into web-ext-artifacts/
 
 ## Privacy
 
-TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. Only origins are stored, with a response count: no paths, query strings or fragments, so the popup stays safe to share, for example in a screenshot. A record is deleted when its tab closes, and all records when Firefox closes.
+TLSView collects and transmits no data. Each tab's record is kept in `storage.session`, which Firefox holds in memory and never writes to disk. Only origins are stored, with a response count: no paths, query strings or fragments, so the popup and the copied report stay safe to share. A record is deleted when its tab closes, and all records when Firefox closes.
 
 ## References
 
